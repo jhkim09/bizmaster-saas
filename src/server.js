@@ -5,6 +5,7 @@ import { config } from './config/index.js';
 import logger from './utils/logger.js';
 import healthRouter from './routes/health.js';
 import diagnoseRouter from './routes/diagnose.js';
+import contactRouter from './routes/contact.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,6 +31,7 @@ app.use(express.static(join(__dirname, '..', 'public')));
 // --- 라우터 ---
 app.use('/', healthRouter);
 app.use('/api', diagnoseRouter);
+app.use('/api', contactRouter);
 
 // --- 전역 에러 핸들러 ---
 app.use((err, _req, res, _next) => {

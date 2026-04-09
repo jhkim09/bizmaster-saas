@@ -321,20 +321,49 @@
       <ol id="actionList" class="space-y-3"></ol>
     </div>
 
-    <!-- CTA 카드 -->
-    <div class="card-enter bg-gradient-to-br from-primary/20 to-accent/8 border border-primary/30 rounded-2xl p-7 text-center">
-      <div class="inline-flex items-center gap-1.5 bg-accent/10 border border-accent/20 rounded-full px-3 py-1 mb-3">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        <span class="text-accent text-xs font-semibold">진단 완료 — 다음 단계</span>
+    <!-- 상담 신청 카드 -->
+    <div class="card-enter bg-gradient-to-br from-primary/20 to-accent/8 border border-primary/30 rounded-2xl p-7">
+      <!-- 헤더 -->
+      <div class="text-center mb-5">
+        <div class="inline-flex items-center gap-1.5 bg-accent/10 border border-accent/20 rounded-full px-3 py-1 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="text-accent text-xs font-semibold">진단 완료 — 다음 단계</span>
+        </div>
+        <p class="text-white font-bold text-lg">이 결과로 실제 환급을 받으려면?</p>
+        <p class="text-slate-400 text-sm mt-1.5">연락처만 남겨주시면 전문가가 24시간 내 연락드립니다.</p>
       </div>
-      <p class="text-white font-bold text-lg mb-2">이 결과로 실제 환급을 받으려면?</p>
-      <p class="text-slate-400 text-sm mb-5 leading-relaxed">AI 진단은 가능성을 보여줍니다.<br>실제 신청·실행은 전문가와 함께해야 합니다.</p>
-      <a href="https://mmtum.co.kr/#contact" target="_blank"
-         class="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-[#0f172a] font-bold rounded-lg px-8 py-3.5 text-sm transition-all shadow-lg shadow-accent/20">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
-        30분 전략 상담 신청 (첫 상담 비용 없음)
-      </a>
-      <p class="text-slate-600 text-xs mt-3">mmtum.co.kr · 24시간 내 회신 보장</p>
+
+      <!-- 접수 폼 -->
+      <form id="contactForm" class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <input id="ctaName" type="text" placeholder="성함" autocomplete="name"
+            class="bg-white/8 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-accent/60 focus:border-accent/60 transition-all text-sm w-full" />
+          <input id="ctaPhone" type="tel" placeholder="연락처 *" autocomplete="tel" required inputmode="tel"
+            class="bg-white/8 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-accent/60 focus:border-accent/60 transition-all text-sm w-full" />
+        </div>
+        <input id="ctaEmail" type="email" placeholder="이메일 (선택)" autocomplete="email"
+          class="bg-white/8 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-accent/60 focus:border-accent/60 transition-all text-sm w-full" />
+        <button type="submit" id="ctaSubmitBtn"
+          class="w-full bg-accent hover:bg-accent/90 active:scale-[0.98] text-[#0f172a] font-bold rounded-xl py-3.5 transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-accent/20">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+          <span id="ctaBtnText">30분 전략 상담 신청 (첫 상담 비용 없음)</span>
+        </button>
+        <p id="ctaError" class="text-red-400 text-xs text-center hidden"></p>
+      </form>
+
+      <!-- 접수 완료 화면 (hidden) -->
+      <div id="contactSuccess" class="hidden text-center py-4">
+        <div class="text-4xl mb-3">✅</div>
+        <p class="text-white font-bold text-base mb-1">상담 신청이 접수되었습니다!</p>
+        <p class="text-slate-400 text-sm mb-4">24시간 내 연락드리겠습니다.</p>
+        <a href="https://mmtum.co.kr" target="_blank"
+           class="inline-flex items-center gap-1.5 text-accent text-sm hover:underline">
+          mmtum.co.kr 방문하기
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </a>
+      </div>
+
+      <p class="text-slate-600 text-xs text-center mt-3">개인정보는 상담 목적으로만 사용됩니다</p>
     </div>
 
     <!-- 면책 고지 -->
@@ -466,6 +495,50 @@
     resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  // ── 상담 신청 폼 ──
+  const contactForm = document.getElementById('contactForm');
+  const contactSuccess = document.getElementById('contactSuccess');
+  let lastDiagnosisCompany = '';
+  let lastDiagnosisSummary = '';
+
+  document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name  = document.getElementById('ctaName').value.trim();
+    const phone = document.getElementById('ctaPhone').value.trim();
+    const email = document.getElementById('ctaEmail').value.trim();
+    const ctaError = document.getElementById('ctaError');
+    const ctaBtn  = document.getElementById('ctaSubmitBtn');
+    const ctaBtnText = document.getElementById('ctaBtnText');
+
+    if (!phone) {
+      ctaError.textContent = '연락처를 입력해주세요.';
+      ctaError.classList.remove('hidden');
+      return;
+    }
+    ctaError.classList.add('hidden');
+    ctaBtn.disabled = true;
+    ctaBtnText.textContent = '접수 중...';
+
+    try {
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, phone, email,
+          companyName: lastDiagnosisCompany,
+          summary: lastDiagnosisSummary,
+        }),
+      });
+      contactForm.classList.add('hidden');
+      contactSuccess.classList.remove('hidden');
+    } catch {
+      ctaBtn.disabled = false;
+      ctaBtnText.textContent = '30분 전략 상담 신청 (첫 상담 비용 없음)';
+      ctaError.textContent = '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      ctaError.classList.remove('hidden');
+    }
+  });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError();
@@ -500,6 +573,13 @@
         return;
       }
 
+      lastDiagnosisCompany = body.companyName || body.bzno || '';
+      lastDiagnosisSummary = json.data?.summary || '';
+      // 상담 폼 초기화 (재진단 시)
+      contactForm.classList.remove('hidden');
+      contactSuccess.classList.add('hidden');
+      document.getElementById('ctaSubmitBtn').disabled = false;
+      document.getElementById('ctaBtnText').textContent = '30분 전략 상담 신청 (첫 상담 비용 없음)';
       renderResult(json.data);
     } catch (err) {
       showError('네트워크 오류: ' + err.message);
