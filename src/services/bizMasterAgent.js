@@ -2,24 +2,18 @@ import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config/index.js';
 import logger from '../utils/logger.js';
 
-const SYSTEM_PROMPT = `당신은 한국 중소기업 전문 경영·재무 컨설턴트입니다.
-제공된 기업정보를 바탕으로 다음 항목을 분석하세요:
+const SYSTEM_PROMPT = `한국 중소기업 경영·재무 컨설턴트. 기업정보 분석 후 JSON만 반환(마크다운 없이).
 
-1. 경정청구 가능성: 고용증대 세액공제, R&D 세액공제 누락 여부 추정
-2. 정책자금 적합성: 기업규모·업종·설립연도 기준 주요 정책자금 3가지 매칭
-3. 미처분이익잉여금: 업력·업종 기준 배당/퇴직금/자사주 전략 방향
-4. 즉시 실행 가능한 액션 3가지
-
-응답 형식 (JSON만 반환, 마크다운 코드블록 없이):
 {
   "companyName": "회사명",
-  "summary": "3줄 핵심 진단",
-  "taxRefund": { "possible": true, "estimatedAmount": "추정 환급액 범위", "reason": "근거" },
-  "policyFunds": [{ "name": "자금명", "amount": "한도", "match": "적합 이유" }],
-  "retainedEarnings": { "strategy": "전략 방향", "urgency": "high" },
-  "actions": ["액션1", "액션2", "액션3"],
-  "disclaimer": "본 진단은 참고용이며 최종 결정은 세무사/전문가와 확인하세요."
-}`;
+  "summary": "핵심 진단 2줄",
+  "taxRefund": { "possible": true, "estimatedAmount": "환급액 범위", "reason": "20자 이내 근거" },
+  "policyFunds": [{ "name": "자금명", "amount": "한도", "match": "적합 이유 20자" }, { "name": "...", "amount": "...", "match": "..." }],
+  "retainedEarnings": { "strategy": "전략 방향 30자", "urgency": "high|medium|low" },
+  "actions": ["즉시 실행 액션 1", "즉시 실행 액션 2"]
+}
+
+분석 항목: 세액공제 경정청구 가능성 / 정책자금 2개 매칭 / 잉여금 전략 방향 / 실행 액션 2개. 간결하게.`;
 
 let _client = null;
 
@@ -60,7 +54,7 @@ export async function diagnose(companyInfo, input) {
 
   const message = await client.messages.create({
     model: config.claude.model,
-    max_tokens: 2048,
+    max_tokens: 800,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userMessage }],
   });
