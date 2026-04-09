@@ -51,6 +51,16 @@
     .card-enter {
       animation: fadeUp 0.5s ease both;
     }
+    /* 브라우저 자동완성 배경 강제 오버라이드 */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px #1e2124 inset !important;
+      -webkit-text-fill-color: #ffffff !important;
+      caret-color: #ffffff;
+    }
+    input { color: #ffffff; }
+
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
