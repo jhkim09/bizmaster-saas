@@ -157,9 +157,61 @@
       <h2 class="text-white font-bold text-lg mb-6 text-center">기업정보 입력</h2>
       <form id="diagnoseForm" class="space-y-4">
 
+        <!-- 요청자 정보 -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1.5">
+              이름 <span class="text-red-400 font-normal text-xs">*필수</span>
+            </label>
+            <input
+              id="reqName"
+              type="text"
+              placeholder="예) 홍길동"
+              autocomplete="name"
+              class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
+              style="background:#1e2124;color:#fff;"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1.5">
+              연락처 <span class="text-slate-500 font-normal text-xs">(선택)</span>
+            </label>
+            <input
+              id="reqPhone"
+              type="tel"
+              placeholder="예) 010-0000-0000"
+              autocomplete="tel"
+              inputmode="tel"
+              class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
+              style="background:#1e2124;color:#fff;"
+            />
+          </div>
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-slate-300 mb-1.5">
-            회사명 <span class="text-slate-500 font-normal">(필수)</span>
+            이메일 <span class="text-red-400 font-normal text-xs">*필수</span>
+          </label>
+          <input
+            id="reqEmail"
+            type="email"
+            placeholder="예) hong@company.com"
+            autocomplete="email"
+            class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
+            style="background:#1e2124;color:#fff;"
+          />
+        </div>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 py-1">
+          <div class="flex-1 h-px bg-white/10"></div>
+          <span class="text-xs text-slate-500 px-1">기업정보</span>
+          <div class="flex-1 h-px bg-white/10"></div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-1.5">
+            회사명 <span class="text-red-400 font-normal text-xs">*필수</span>
           </label>
           <input
             id="companyName"
@@ -171,39 +223,32 @@
           />
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">
-            대표자명 <span class="text-slate-500 font-normal">(선택)</span>
-          </label>
-          <input
-            id="ceoName"
-            type="text"
-            placeholder="예) 홍길동"
-            autocomplete="name"
-            class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
-            style="background:#1e2124;color:#fff;"
-          />
-        </div>
-
-        <!-- Divider -->
-        <div class="flex items-center gap-3 py-1">
-          <div class="flex-1 h-px bg-white/10"></div>
-          <span class="text-xs text-slate-500 px-1">또는</span>
-          <div class="flex-1 h-px bg-white/10"></div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-300 mb-1.5">
-            사업자번호 <span class="text-slate-500 font-normal">(선택)</span>
-          </label>
-          <input
-            id="bzno"
-            type="text"
-            placeholder="예) 123-45-67890"
-            inputmode="numeric"
-            class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
-            style="background:#1e2124;color:#fff;"
-          />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1.5">
+              대표자명 <span class="text-slate-500 font-normal text-xs">(선택)</span>
+            </label>
+            <input
+              id="ceoName"
+              type="text"
+              placeholder="예) 홍길동"
+              class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
+              style="background:#1e2124;color:#fff;"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1.5">
+              사업자번호 <span class="text-slate-500 font-normal text-xs">(선택)</span>
+            </label>
+            <input
+              id="bzno"
+              type="text"
+              placeholder="예) 123-45-67890"
+              inputmode="numeric"
+              class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
+              style="background:#1e2124;color:#fff;"
+            />
+          </div>
         </div>
 
         <button
@@ -568,10 +613,15 @@
     hideError();
     resultSection.classList.add('hidden');
 
+    const reqName    = document.getElementById('reqName').value.trim();
+    const reqEmail   = document.getElementById('reqEmail').value.trim();
+    const reqPhone   = document.getElementById('reqPhone').value.trim();
     const companyName = document.getElementById('companyName').value.trim();
-    const ceoName = document.getElementById('ceoName').value.trim();
-    const bzno = document.getElementById('bzno').value.trim();
+    const ceoName    = document.getElementById('ceoName').value.trim();
+    const bzno       = document.getElementById('bzno').value.trim();
 
+    if (!reqName) { showError('이름을 입력해주세요.'); return; }
+    if (!reqEmail) { showError('이메일을 입력해주세요.'); return; }
     if (!companyName && !bzno) {
       showError('회사명 또는 사업자번호 중 하나를 입력해주세요.');
       return;
@@ -579,7 +629,8 @@
 
     setLoading(true);
     try {
-      const body = {};
+      const body = { reqName, email: reqEmail };
+      if (reqPhone)    body.phone = reqPhone;
       if (companyName) body.companyName = companyName;
       if (ceoName)     body.ceoName = ceoName;
       if (bzno)        body.bzno = bzno;
@@ -593,7 +644,16 @@
       const json = await res.json();
 
       if (!res.ok || !json.ok) {
-        showError(json.error ?? `서버 오류 (${res.status})`);
+        if (json.code === 'DUPLICATE_BZNO') {
+          showError('이미 진단된 사업자번호입니다. 아래 상담 신청 폼을 이용해주세요.');
+          resultSection.classList.add('hidden');
+          document.querySelector('.card-enter.bg-gradient-to-br.from-primary\\/20.to-accent\\/8')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (json.code === 'RATE_LIMIT') {
+          showError('오늘 진단 한도(5회)를 초과했습니다. 내일 다시 시도해 주세요.');
+        } else {
+          showError(json.error ?? `서버 오류 (${res.status})`);
+        }
         return;
       }
 

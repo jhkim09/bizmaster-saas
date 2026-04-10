@@ -9,4 +9,8 @@ export const config = {
   copartner: {
     baseUrl: 'https://copartner-fastapi-scraper.onrender.com',
   },
+  supabase: {
+    url: process.env.SUPABASE_URL,
+    anonKey: process.env.SUPABASE_ANON_KEY,
+  },
 };
