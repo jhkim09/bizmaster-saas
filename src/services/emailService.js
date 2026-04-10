@@ -24,9 +24,9 @@ function getTransporter() {
   if (!_transporter) {
     _transporter = nodemailer.createTransport({
       host: config.smtp.host,
-      port: 465,
-      secure: true,
-      tls: { rejectUnauthorized: false },
+      port: config.smtp.port,
+      secure: false,
+      requireTLS: true,
       auth: { user: config.smtp.user, pass: config.smtp.pass },
     });
   }

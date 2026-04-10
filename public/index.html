@@ -200,7 +200,7 @@
             class="w-full border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/60 focus:border-primary/60 transition-all text-sm"
             style="background:#1e2124;color:#fff;"
           />
-          <p class="mt-1.5 text-xs text-slate-500">Gmail, 네이버 메일 권장 · 카카오메일은 스팸함을 확인해주세요</p>
+          <p class="mt-1.5 text-xs text-slate-500">Gmail, 네이버 메일 권장 · 카카오메일(@kakao.com)은 수신 불가</p>
         </div>
 
         <!-- Divider -->
@@ -669,6 +669,7 @@
 
     if (!reqName) { showError('이름을 입력해주세요.'); return; }
     if (!reqEmail) { showError('이메일을 입력해주세요.'); return; }
+    if (/@kakao\.com$/i.test(reqEmail)) { showError('카카오메일(@kakao.com)은 이메일 수신이 불가합니다. Gmail 또는 네이버 메일을 사용해주세요.'); return; }
     if (!companyName && !bzno) {
       showError('회사명 또는 사업자번호 중 하나를 입력해주세요.');
       return;
