@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { searchCompany } from '../services/copartnerService.js';
 import { diagnose } from '../services/bizMasterAgent.js';
 import { isDuplicate, saveLog } from '../services/supabaseService.js';
+import { sendAdminAlert, sendUserConfirm } from '../services/emailService.js';
 import { dailyRateLimit } from '../middleware/rateLimit.js';
 import logger from '../utils/logger.js';
 
@@ -33,8 +34,14 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
     if (!reqName) {
       return res.status(400).json({ ok: false, error: '이름을 입력해주세요.' });
     }
-    if (!email) {
-      return res.status(400).json({ ok: false, error: '이메일을 입력해주세요.' });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ ok: false, error: '올바른 이메일 형식을 입력해주세요.' });
+    }
+    if (bzno) {
+      const cleanBzno = bzno.replace(/[-\s]/g, '');
+      if (!/^\d{10}$/.test(cleanBzno)) {
+        return res.status(400).json({ ok: false, error: '사업자번호는 10자리 숫자로 입력해주세요.' });
+      }
     }
 
     // 2. 사업자번호 중복 체크
@@ -61,23 +68,18 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
     // 4. Claude AI 진단
     const report = await diagnose(companyInfo, { bzno, companyName, ceoName });
 
-    // 5. Supabase 로그 저장 (비동기, 실패해도 응답 영향 없음)
-    saveLog({
-      bzno,
-      company: companyInfo?.company?.name ?? companyName,
-      ceoName,
-      reqName,
-      email,
-      phone,
-      ip,
-      result: report,
-    }).catch(() => {});
+    const company = companyInfo?.company?.name ?? companyName;
+
+    // 5. Supabase 로그 저장 + 이메일 발송 (비동기, 실패해도 응답 영향 없음)
+    saveLog({ bzno, company, ceoName, reqName, email, phone, ip, result: report }).catch(() => {});
+    sendAdminAlert({ reqName, email, phone, company, bzno, report }).catch(() => {});
+    sendUserConfirm({ reqName, email, company, report }).catch(() => {});
 
     // 6. 응답
     res.json({ ok: true, data: report });
   } catch (err) {
     logger.error(`POST /api/diagnose 오류: ${err.message}`, err);
-    res.status(500).json({ ok: false, error: err.message });
+    res.status(500).json({ ok: false, error: '진단 처리 중 오류가 발생했습니다.' });
   }
 });
 
