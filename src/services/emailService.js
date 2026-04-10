@@ -42,7 +42,7 @@ export async function sendAdminAlert({ reqName, email, phone, company, bzno, rep
     const taxPossible = report?.taxRefund?.possible ? '가능' : '검토필요';
 
     await getTransporter().sendMail({
-      from: `"BizMaster AI" <${config.smtp.user}>`,
+      from: '"BizMaster AI" <admin@mmtum.co.kr>',
       to: 'admin@mmtum.co.kr',
       subject: `[BizMaster] 새 진단 요청 — ${safeSubject(company)}`,
       html: `
@@ -78,7 +78,7 @@ export async function sendUserConfirm({ reqName, email, company, report }) {
     const funds = (report?.policyFunds ?? []).map(f => `<li style="margin:6px 0;"><b>${esc(f.name)}</b> ${esc(f.amount)} — ${esc(f.match)}</li>`).join('');
 
     await getTransporter().sendMail({
-      from: `"BizMaster AI" <${config.smtp.user}>`,
+      from: '"BizMaster AI" <admin@mmtum.co.kr>',
       to: email,
       subject: `[BizMaster AI] ${safeSubject(company)} 진단 결과가 도착했습니다`,
       html: `
