@@ -251,6 +251,35 @@
           </div>
         </div>
 
+        <!-- 개인정보 수집·이용 동의 -->
+        <div class="bg-white/3 border border-white/10 rounded-xl px-4 py-3">
+          <label class="flex items-start gap-3 cursor-pointer group">
+            <input
+              id="privacyCheck"
+              type="checkbox"
+              class="mt-0.5 w-4 h-4 shrink-0 rounded border-white/30 bg-transparent accent-primary cursor-pointer"
+            />
+            <span class="text-xs text-slate-400 leading-relaxed select-none">
+              <span class="text-white font-medium">[필수] 개인정보 수집·이용 동의</span><br>
+              수집 항목: 이름, 이메일, 연락처, 사업자번호, AI 진단 결과<br>
+              수집 목적: 진단 결과 제공 및 컨설팅 상담 연락<br>
+              보유 기간: 수집일로부터 1년<br>
+              <button type="button" id="privacyDetailBtn" class="text-accent underline hover:text-accent/80 mt-1 inline-block">전문 보기 ▾</button>
+            </span>
+          </label>
+          <!-- 전문 펼침 -->
+          <div id="privacyDetail" class="hidden mt-3 pt-3 border-t border-white/10 text-xs text-slate-500 leading-relaxed space-y-1.5">
+            <p>본 서비스(BizMaster AI)는 「개인정보 보호법」 제15조에 따라 아래와 같이 개인정보를 수집·이용합니다.</p>
+            <p><span class="text-slate-400 font-medium">수집 항목:</span> 이름, 이메일, 연락처(선택), 사업자번호(선택), AI 진단 결과</p>
+            <p><span class="text-slate-400 font-medium">수집 목적:</span> AI 경영진단 결과 제공, 추가 컨설팅 상담 연락, 서비스 품질 개선</p>
+            <p><span class="text-slate-400 font-medium">보유·이용 기간:</span> 수집일로부터 1년 (상담 계약 체결 시 계약 종료 후 5년)</p>
+            <p><span class="text-slate-400 font-medium">제3자 제공:</span> 원칙적으로 제3자에게 제공하지 않습니다. 단, 법령에 의한 경우 예외.</p>
+            <p><span class="text-slate-400 font-medium">동의 거부 권리:</span> 개인정보 수집·이용에 동의를 거부할 권리가 있으나, 거부 시 무료 진단 서비스 이용이 제한됩니다.</p>
+            <p>문의: <a href="mailto:contact@mmtum.co.kr" class="text-accent hover:underline">contact@mmtum.co.kr</a></p>
+          </div>
+          <p id="privacyError" class="hidden text-red-400 text-xs mt-2">개인정보 수집·이용에 동의해주세요.</p>
+        </div>
+
         <button
           type="submit"
           id="submitBtn"
@@ -462,6 +491,14 @@
 </footer>
 
 <script>
+  // 개인정보 전문 토글
+  document.getElementById('privacyDetailBtn').addEventListener('click', () => {
+    const detail = document.getElementById('privacyDetail');
+    const btn = document.getElementById('privacyDetailBtn');
+    const hidden = detail.classList.toggle('hidden');
+    btn.textContent = hidden ? '전문 보기 ▾' : '접기 ▴';
+  });
+
   const form = document.getElementById('diagnoseForm');
   const submitBtn = document.getElementById('submitBtn');
   const btnText = document.getElementById('btnText');
@@ -619,6 +656,15 @@
     const companyName = document.getElementById('companyName').value.trim();
     const ceoName    = document.getElementById('ceoName').value.trim();
     const bzno       = document.getElementById('bzno').value.trim();
+
+    const privacyCheck = document.getElementById('privacyCheck');
+    const privacyError = document.getElementById('privacyError');
+    if (!privacyCheck.checked) {
+      privacyError.classList.remove('hidden');
+      privacyCheck.closest('label').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    privacyError.classList.add('hidden');
 
     if (!reqName) { showError('이름을 입력해주세요.'); return; }
     if (!reqEmail) { showError('이메일을 입력해주세요.'); return; }
