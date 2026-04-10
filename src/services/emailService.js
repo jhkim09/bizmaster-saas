@@ -26,7 +26,7 @@ function getTransporter() {
       host: config.smtp.host,
       port: config.smtp.port,
       secure: false,
-      requireTLS: true,
+      tls: { rejectUnauthorized: false, minVersion: 'TLSv1' },
       auth: { user: config.smtp.user, pass: config.smtp.pass },
     });
   }
