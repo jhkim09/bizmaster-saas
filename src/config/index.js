@@ -13,10 +13,7 @@ export const config = {
     url: process.env.SUPABASE_URL,
     anonKey: process.env.SUPABASE_ANON_KEY,
   },
-  smtp: {
-    host: process.env.SMTP_HOST || 'smtp.cafe24.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+  brevo: {
+    apiKey: process.env.BREVO_API_KEY,
   },
 };

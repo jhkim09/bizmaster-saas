@@ -1,6 +1,9 @@
-import nodemailer from 'nodemailer';
+import axios from 'axios';
 import { config } from '../config/index.js';
 import logger from '../utils/logger.js';
+
+const BREVO_API = 'https://api.brevo.com/v3/smtp/email';
+const SENDER = { name: 'BizMaster AI', email: 'admin@mmtum.co.kr' };
 
 /** HTML 특수문자 이스케이프 — XSS 방지 */
 function esc(str) {
@@ -13,24 +16,15 @@ function esc(str) {
     .replace(/'/g, '&#x27;');
 }
 
-/** 이메일 헤더 인젝션 방지 — subject용 */
-function safeSubject(str) {
-  return String(str ?? '').replace(/[\r\n\0]/g, ' ').slice(0, 100);
-}
-
-let _transporter = null;
-
-function getTransporter() {
-  if (!_transporter) {
-    _transporter = nodemailer.createTransport({
-      host: config.smtp.host,
-      port: config.smtp.port,
-      secure: false,
-      requireTLS: true,
-      auth: { user: config.smtp.user, pass: config.smtp.pass },
-    });
-  }
-  return _transporter;
+async function send({ to, subject, html }) {
+  await axios.post(BREVO_API, {
+    sender: SENDER,
+    to: [{ email: to }],
+    subject,
+    htmlContent: html,
+  }, {
+    headers: { 'api-key': config.brevo.apiKey, 'Content-Type': 'application/json' },
+  });
 }
 
 /**
@@ -41,10 +35,9 @@ export async function sendAdminAlert({ reqName, email, phone, company, bzno, rep
     const urgency = report?.retainedEarnings?.urgency ?? '-';
     const taxPossible = report?.taxRefund?.possible ? '가능' : '검토필요';
 
-    await getTransporter().sendMail({
-      from: '"BizMaster AI" <admin@mmtum.co.kr>',
+    await send({
       to: 'admin@mmtum.co.kr',
-      subject: `[BizMaster] 새 진단 요청 — ${safeSubject(company)}`,
+      subject: `[BizMaster] 새 진단 요청 — ${company}`,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
           <h2 style="color:#2563eb;">새 AI 진단 요청이 접수되었습니다</h2>
@@ -65,7 +58,7 @@ export async function sendAdminAlert({ reqName, email, phone, company, bzno, rep
     });
     logger.info(`관리자 알림 발송 완료: ${company}`);
   } catch (err) {
-    logger.error(`관리자 알림 발송 실패: ${err.message}`);
+    logger.error(`관리자 알림 발송 실패: ${err.response?.data?.message ?? err.message}`);
   }
 }
 
@@ -77,10 +70,9 @@ export async function sendUserConfirm({ reqName, email, company, report }) {
     const actions = (report?.actions ?? []).map((a) => `<li style="margin:6px 0;">${esc(a)}</li>`).join('');
     const funds = (report?.policyFunds ?? []).map(f => `<li style="margin:6px 0;"><b>${esc(f.name)}</b> ${esc(f.amount)} — ${esc(f.match)}</li>`).join('');
 
-    await getTransporter().sendMail({
-      from: '"BizMaster AI" <admin@mmtum.co.kr>',
+    await send({
       to: email,
-      subject: `[BizMaster AI] ${safeSubject(company)} 진단 결과가 도착했습니다`,
+      subject: `[BizMaster AI] ${company} 진단 결과가 도착했습니다`,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
           <h2 style="color:#2563eb;">AI 경영진단 결과</h2>
@@ -113,6 +105,6 @@ export async function sendUserConfirm({ reqName, email, company, report }) {
     });
     logger.info(`요청자 확인메일 발송 완료: ${email}`);
   } catch (err) {
-    logger.error(`요청자 확인메일 발송 실패: ${err.message}`);
+    logger.error(`요청자 확인메일 발송 실패: ${err.response?.data?.message ?? err.message}`);
   }
 }
