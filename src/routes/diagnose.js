@@ -35,7 +35,10 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
     if (!reqName) {
       return res.status(400).json({ ok: false, error: '이름을 입력해주세요.' });
     }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email && !phone) {
+      return res.status(400).json({ ok: false, error: '이메일 또는 전화번호 중 하나는 필수입니다.' });
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ ok: false, error: '올바른 이메일 형식을 입력해주세요.' });
     }
     if (bzno) {
