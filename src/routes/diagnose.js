@@ -3,6 +3,7 @@ import { searchCompany } from '../services/copartnerService.js';
 import { diagnose } from '../services/bizMasterAgent.js';
 import { isDuplicate, saveLog } from '../services/supabaseService.js';
 import { sendAdminAlert, sendUserConfirm } from '../services/emailService.js';
+import { sendUserLms } from '../services/smsService.js';
 import { dailyRateLimit } from '../middleware/rateLimit.js';
 import logger from '../utils/logger.js';
 
@@ -73,7 +74,8 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
     // 5. Supabase 로그 저장 + 이메일 발송 (비동기, 실패해도 응답 영향 없음)
     saveLog({ bzno, company, ceoName, reqName, email, phone, ip, result: report }).catch(() => {});
     sendAdminAlert({ reqName, email, phone, company, bzno, report }).catch(() => {});
-    sendUserConfirm({ reqName, email, company, report }).catch(() => {});
+    if (email) sendUserConfirm({ reqName, email, company, report }).catch(() => {});
+    if (phone) sendUserLms({ reqName, phone, company, report }).catch(() => {});
 
     // 6. 응답
     res.json({ ok: true, data: report });

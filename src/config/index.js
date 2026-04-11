@@ -16,4 +16,8 @@ export const config = {
   brevo: {
     apiKey: process.env.BREVO_API_KEY,
   },
+  solapi: {
+    apiKey: process.env.SOLAPI_API_KEY,
+    apiSecret: process.env.SOLAPI_API_SECRET,
+  },
 };
