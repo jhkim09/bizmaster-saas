@@ -13,8 +13,10 @@ export const config = {
     url: process.env.SUPABASE_URL,
     anonKey: process.env.SUPABASE_ANON_KEY,
   },
-  brevo: {
-    apiKey: process.env.BREVO_API_KEY,
+  aws: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION || 'ap-northeast-2',
   },
   solapi: {
     apiKey: process.env.SOLAPI_API_KEY,

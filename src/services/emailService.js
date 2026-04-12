@@ -1,9 +1,16 @@
-import axios from 'axios';
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { config } from '../config/index.js';
 import logger from '../utils/logger.js';
 
-const BREVO_API = 'https://api.brevo.com/v3/smtp/email';
-const SENDER = { name: 'BizMaster AI', email: 'admin@mmtum.co.kr' };
+const ses = new SESClient({
+  region: config.aws.region,
+  credentials: {
+    accessKeyId: config.aws.accessKeyId,
+    secretAccessKey: config.aws.secretAccessKey,
+  },
+});
+
+const SENDER = 'BizMaster AI <admin@mmtum.co.kr>';
 
 /** HTML 특수문자 이스케이프 — XSS 방지 */
 function esc(str) {
@@ -17,14 +24,15 @@ function esc(str) {
 }
 
 async function send({ to, subject, html }) {
-  await axios.post(BREVO_API, {
-    sender: SENDER,
-    to: [{ email: to }],
-    subject,
-    htmlContent: html,
-  }, {
-    headers: { 'api-key': config.brevo.apiKey, 'Content-Type': 'application/json' },
+  const command = new SendEmailCommand({
+    Source: SENDER,
+    Destination: { ToAddresses: [to] },
+    Message: {
+      Subject: { Data: subject, Charset: 'UTF-8' },
+      Body: { Html: { Data: html, Charset: 'UTF-8' } },
+    },
   });
+  await ses.send(command);
 }
 
 /**
@@ -58,7 +66,7 @@ export async function sendAdminAlert({ reqName, email, phone, company, bzno, rep
     });
     logger.info(`관리자 알림 발송 완료: ${company}`);
   } catch (err) {
-    logger.error(`관리자 알림 발송 실패: ${err.response?.data?.message ?? err.message}`);
+    logger.error(`관리자 알림 발송 실패: ${err.message}`);
   }
 }
 
@@ -105,6 +113,6 @@ export async function sendUserConfirm({ reqName, email, company, report }) {
     });
     logger.info(`요청자 확인메일 발송 완료: ${email}`);
   } catch (err) {
-    logger.error(`요청자 확인메일 발송 실패: ${err.response?.data?.message ?? err.message}`);
+    logger.error(`요청자 확인메일 발송 실패: ${err.message}`);
   }
 }
