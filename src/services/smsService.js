@@ -3,7 +3,7 @@ import axios from 'axios';
 import { config } from '../config/index.js';
 import logger from '../utils/logger.js';
 
-const SENDER = '01020221053';
+const SENDER = '07080643304';
 const API_URL = 'https://api.solapi.com/messages/v4/send';
 
 function makeAuth() {
