@@ -24,12 +24,13 @@ function esc(str) {
 }
 
 async function send({ to, subject, html }) {
+  const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body>${html}</body></html>`;
   const command = new SendEmailCommand({
     Source: SENDER,
     Destination: { ToAddresses: [to] },
     Message: {
       Subject: { Data: subject, Charset: 'UTF-8' },
-      Body: { Html: { Data: html, Charset: 'UTF-8' } },
+      Body: { Html: { Data: fullHtml, Charset: 'UTF-8' } },
     },
   });
   await ses.send(command);
