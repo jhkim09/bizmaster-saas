@@ -118,4 +118,21 @@ router.post('/test-lms', async (req, res) => {
   }
 });
 
+/** GET /api/sender-ids — 솔라피 등록 발신번호 조회 */
+router.get('/sender-ids', async (req, res) => {
+  const crypto = await import('crypto');
+  const axios = await import('axios');
+  const { config } = await import('../config/index.js');
+  const date = new Date().toISOString();
+  const salt = crypto.randomBytes(8).toString('hex');
+  const signature = crypto.createHmac('sha256', config.solapi.apiSecret).update(date + salt).digest('hex');
+  const auth = `HMAC-SHA256 apiKey=${config.solapi.apiKey}, date=${date}, salt=${salt}, signature=${signature}`;
+  try {
+    const result = await axios.default.get('https://api.solapi.com/senderid/v1/numbers', { headers: { Authorization: auth } });
+    res.json({ ok: true, senderIds: result.data });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.response?.data ?? err.message });
+  }
+});
+
 export default router;
