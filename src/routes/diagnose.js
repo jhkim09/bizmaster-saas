@@ -75,16 +75,37 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
     const company = companyInfo?.company?.name ?? companyName;
 
     // 5. Supabase 로그 저장 + 이메일 발송 (비동기, 실패해도 응답 영향 없음)
-    saveLog({ bzno, company, ceoName, reqName, email, phone, ip, result: report }).catch(() => {});
-    sendAdminAlert({ reqName, email, phone, company, bzno, report }).catch(() => {});
-    if (email) sendUserConfirm({ reqName, email, company, report }).catch(() => {});
-    if (phone) sendUserLms({ reqName, phone, company, report }).catch(() => {});
+    saveLog({ bzno, company, ceoName, reqName, email, phone, ip, result: report }).catch(e => logger.error(`Supabase 저장 실패: ${e.message}`));
+    sendAdminAlert({ reqName, email, phone, company, bzno, report }).catch(e => logger.error(`관리자 알림 실패: ${e.message}`));
+    if (email) sendUserConfirm({ reqName, email, company, report }).catch(e => logger.error(`확인메일 실패: ${e.message}`));
+    if (phone) sendUserLms({ reqName, phone, company, report }).catch(e => logger.error(`LMS 실패: ${e.message}`));
 
     // 6. 응답
     res.json({ ok: true, data: report });
   } catch (err) {
     logger.error(`POST /api/diagnose 오류: ${err.message}`, err);
     res.status(500).json({ ok: false, error: '진단 처리 중 오류가 발생했습니다.' });
+  }
+});
+
+/**
+ * POST /api/test-lms
+ * Body: { phone }
+ * LMS 발송 단독 테스트 (에러 응답 반환)
+ */
+router.post('/test-lms', async (req, res) => {
+  try {
+    const { phone } = req.body ?? {};
+    if (!phone) return res.status(400).json({ ok: false, error: 'phone 필수' });
+    await sendUserLms({
+      reqName: '테스트',
+      phone,
+      company: '발신테스트',
+      report: { summary: 'LMS 발신번호 변경 테스트입니다.' },
+    });
+    res.json({ ok: true, message: 'LMS 발송 시도 완료' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
