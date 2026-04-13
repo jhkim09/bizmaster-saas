@@ -94,18 +94,27 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
  * LMS 발송 단독 테스트 (에러 응답 반환)
  */
 router.post('/test-lms', async (req, res) => {
+  const { phone } = req.body ?? {};
+  if (!phone) return res.status(400).json({ ok: false, error: 'phone 필수' });
+
+  // 솔라피 API 직접 호출 — 에러 시 응답에 포함
+  const crypto = await import('crypto');
+  const axios = await import('axios');
+  const { config } = await import('../config/index.js');
+
+  const date = new Date().toISOString();
+  const salt = crypto.randomBytes(8).toString('hex');
+  const signature = crypto.createHmac('sha256', config.solapi.apiSecret).update(date + salt).digest('hex');
+  const auth = `HMAC-SHA256 apiKey=${config.solapi.apiKey}, date=${date}, salt=${salt}, signature=${signature}`;
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+
   try {
-    const { phone } = req.body ?? {};
-    if (!phone) return res.status(400).json({ ok: false, error: 'phone 필수' });
-    await sendUserLms({
-      reqName: '테스트',
-      phone,
-      company: '발신테스트',
-      report: { summary: 'LMS 발신번호 변경 테스트입니다.' },
-    });
-    res.json({ ok: true, message: 'LMS 발송 시도 완료' });
+    const result = await axios.default.post('https://api.solapi.com/messages/v4/send', {
+      message: { to: cleanPhone, from: '07080643304', text: '[BizMaster AI] 발신번호 변경 테스트\n070-8064-3304 정상 발송 확인용', type: 'LMS', subject: '[BizMaster] 테스트' },
+    }, { headers: { Authorization: auth, 'Content-Type': 'application/json' } });
+    res.json({ ok: true, solapi: result.data });
   } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+    res.status(500).json({ ok: false, error: err.response?.data ?? err.message });
   }
 });
 
