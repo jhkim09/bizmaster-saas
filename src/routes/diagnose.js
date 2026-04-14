@@ -82,7 +82,7 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
 
     // 5. Supabase 로그 저장 + 이메일 발송 (비동기, 실패해도 응답 영향 없음)
     saveLog({ bzno, company, ceoName, reqName, email, phone, ip, result: report }).catch(e => logger.error(`Supabase 저장 실패: ${e.message}`));
-    sendAdminAlert({ reqName, email, phone, company, bzno, report }).catch(e => logger.error(`관리자 알림 실패: ${e.message}`));
+    sendAdminAlert({ reqName, email, phone, company, ceoName, bzno, report }).catch(e => logger.error(`관리자 알림 실패: ${e.message}`));
     if (email) sendUserConfirm({ reqName, email, company, report }).catch(e => logger.error(`확인메일 실패: ${e.message}`));
     if (phone) sendUserLms({ reqName, phone, company, report }).catch(e => logger.error(`LMS 실패: ${e.message}`));
 

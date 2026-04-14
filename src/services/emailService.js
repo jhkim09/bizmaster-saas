@@ -39,7 +39,7 @@ async function send({ to, subject, html }) {
 /**
  * 관리자 알림 — 새 진단 요청 접수
  */
-export async function sendAdminAlert({ reqName, email, phone, company, bzno, report }) {
+export async function sendAdminAlert({ reqName, email, phone, company, ceoName, bzno, report }) {
   try {
     const actions = (report?.actions ?? []).map((a) => `<li style="margin:6px 0;">${esc(a)}</li>`).join('');
     const funds = (report?.policyFunds ?? []).map(f => `<li style="margin:6px 0;"><b>${esc(f.name)}</b> ${esc(f.amount)} — ${esc(f.match)}</li>`).join('');
@@ -55,7 +55,8 @@ export async function sendAdminAlert({ reqName, email, phone, company, bzno, rep
             <tr><td style="padding:8px 12px;font-weight:bold;">이메일</td><td style="padding:8px 12px;">${esc(email)}</td></tr>
             <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">연락처</td><td style="padding:8px 12px;">${esc(phone) || '미입력'}</td></tr>
             <tr><td style="padding:8px 12px;font-weight:bold;">회사명</td><td style="padding:8px 12px;">${esc(company)}</td></tr>
-            <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">사업자번호</td><td style="padding:8px 12px;">${esc(bzno) || '미입력'}</td></tr>
+            <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">대표자명</td><td style="padding:8px 12px;">${esc(ceoName) || '미입력'}</td></tr>
+            <tr><td style="padding:8px 12px;font-weight:bold;">사업자번호</td><td style="padding:8px 12px;">${esc(bzno) || '미입력'}</td></tr>
           </table>
 
           <hr style="margin:24px 0;border:none;border-top:1px solid #e2e8f0;">
