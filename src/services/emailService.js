@@ -27,7 +27,7 @@ async function send({ to, subject, html }) {
   const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body>${html}</body></html>`;
   const command = new SendEmailCommand({
     Source: SENDER,
-    Destination: { ToAddresses: [to] },
+    Destination: { ToAddresses: Array.isArray(to) ? to : [to] },
     Message: {
       Subject: { Data: subject, Charset: 'UTF-8' },
       Body: { Html: { Data: fullHtml, Charset: 'UTF-8' } },
@@ -45,7 +45,7 @@ export async function sendAdminAlert({ reqName, email, phone, company, ceoName, 
     const funds = (report?.policyFunds ?? []).map(f => `<li style="margin:6px 0;"><b>${esc(f.name)}</b> ${esc(f.amount)} — ${esc(f.match)}</li>`).join('');
 
     await send({
-      to: 'admin@mmtum.co.kr',
+      to: ['admin@mmtum.co.kr', 'arune@kakao.com'],
       subject: `[BizMaster] 새 진단 — ${company} (${esc(reqName)})`,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
