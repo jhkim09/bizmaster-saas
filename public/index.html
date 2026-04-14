@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BizMaster AI | AI 세금환급 무료 진단</title>
-  <meta name="description" content="사업자번호만 입력하면 AI가 세액공제, 정책자금, 미처분이익잉여금 전략을 즉시 분석합니다. Momentum Biz의 BizMaster AI 무료 진단 서비스.">
+  <title>BizMaster AI | AI 경영진단 무료 서비스</title>
+  <meta name="description" content="AI가 1분이면 컨설팅이 필요할만한 부분을 진단합니다. 경정청구, 정책자금, 미처분이익잉여금 전략을 분석하는 Momentum Biz의 BizMaster AI 무료 진단 서비스.">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -124,8 +124,8 @@
       </div>
 
       <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-white tracking-tight break-keep mb-5">
-        사업자번호만 입력하면<br>
-        AI가 <span class="text-gradient">세금 환급 가능액</span>을 진단합니다
+        AI가 <span class="text-gradient">1분</span>이면<br>
+        컨설팅이 필요할만한 부분을 진단합니다
       </h1>
       <p class="text-gray-300 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
         경정청구 가능성, 정책자금 매칭, 미처분이익잉여금 전략을 단 60초 안에 분석해드립니다.
@@ -154,7 +154,8 @@
   <!-- ========== FORM CARD ========== -->
   <section class="w-full max-w-lg px-4 sm:px-0 -mt-6 z-10 pb-4">
     <div class="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-sm glow-blue">
-      <h2 class="text-white font-bold text-lg mb-6 text-center">기업정보 입력</h2>
+      <h2 class="text-white font-bold text-lg mb-1 text-center">기업정보 입력</h2>
+      <p class="text-slate-400 text-xs text-center mb-6">분석 결과를 받으실 정보를 입력해주세요</p>
       <form id="diagnoseForm" class="space-y-4">
 
         <!-- 요청자 정보 -->
@@ -174,7 +175,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-1.5">
-              연락처 <span class="text-slate-500 font-normal text-xs">(선택)</span>
+              연락처 <span class="text-red-400 font-normal text-xs">*필수</span>
             </label>
             <input
               id="reqPhone"
@@ -227,7 +228,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-1.5">
-              대표자명 <span class="text-slate-500 font-normal text-xs">(선택)</span>
+              대표자명 <span class="text-amber-400 font-normal text-xs">*택1필수</span>
             </label>
             <input
               id="ceoName"
@@ -239,7 +240,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-1.5">
-              사업자번호 <span class="text-slate-500 font-normal text-xs">(선택)</span>
+              사업자번호 <span class="text-amber-400 font-normal text-xs">*택1필수</span>
             </label>
             <input
               id="bzno"
@@ -262,7 +263,7 @@
             />
             <span class="text-xs text-slate-400 leading-relaxed select-none">
               <span class="text-white font-medium">[필수] 개인정보 수집·이용 동의</span><br>
-              수집 항목: 이름, 이메일, 연락처, 사업자번호, AI 진단 결과<br>
+              수집 항목: 이름, 연락처, 이메일, 회사명, 대표자명, 사업자번호, AI 진단 결과<br>
               수집 목적: 진단 결과 제공 및 컨설팅 상담 연락<br>
               보유 기간: 수집일로부터 1년<br>
               <button type="button" id="privacyDetailBtn" class="text-accent underline hover:text-accent/80 mt-1 inline-block">전문 보기 ▾</button>
@@ -271,7 +272,7 @@
           <!-- 전문 펼침 -->
           <div id="privacyDetail" class="hidden mt-3 pt-3 border-t border-white/10 text-xs text-slate-500 leading-relaxed space-y-1.5">
             <p>본 서비스(BizMaster AI)는 「개인정보 보호법」 제15조에 따라 아래와 같이 개인정보를 수집·이용합니다.</p>
-            <p><span class="text-slate-400 font-medium">수집 항목:</span> 이름, 이메일, 연락처(선택), 사업자번호(선택), AI 진단 결과</p>
+            <p><span class="text-slate-400 font-medium">수집 항목:</span> 이름, 연락처, 이메일, 회사명, 대표자명(선택), 사업자번호(선택), AI 진단 결과</p>
             <p><span class="text-slate-400 font-medium">수집 목적:</span> AI 경영진단 결과 제공, 추가 컨설팅 상담 연락, 서비스 품질 개선</p>
             <p><span class="text-slate-400 font-medium">보유·이용 기간:</span> 수집일로부터 <strong class="text-slate-300">1년</strong> (이후 자동 삭제)</p>
             <p><span class="text-slate-400 font-medium">제3자 제공:</span> 원칙적으로 제3자에게 제공하지 않습니다. 단, 법령에 의한 경우 예외.</p>
@@ -668,17 +669,17 @@
     privacyError.classList.add('hidden');
 
     if (!reqName) { showError('이름을 입력해주세요.'); return; }
+    if (!reqPhone) { showError('연락처를 입력해주세요.'); return; }
     if (!reqEmail) { showError('이메일을 입력해주세요.'); return; }
-    if (!companyName && !bzno) {
-      showError('회사명 또는 사업자번호 중 하나를 입력해주세요.');
+    if (!companyName) { showError('회사명을 입력해주세요.'); return; }
+    if (!ceoName && !bzno) {
+      showError('대표자명 또는 사업자번호 중 하나를 입력해주세요.');
       return;
     }
 
     setLoading(true);
     try {
-      const body = { reqName, email: reqEmail };
-      if (reqPhone)    body.phone = reqPhone;
-      if (companyName) body.companyName = companyName;
+      const body = { reqName, email: reqEmail, phone: reqPhone, companyName };
       if (ceoName)     body.ceoName = ceoName;
       if (bzno)        body.bzno = bzno;
 

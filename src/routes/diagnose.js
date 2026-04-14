@@ -26,17 +26,23 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
     const { bzno, companyName, ceoName, reqName, email, phone } = req.body ?? {};
 
     // 1. 입력 검증
-    if (!bzno && !companyName) {
-      return res.status(400).json({
-        ok: false,
-        error: '사업자번호(bzno) 또는 회사명(companyName) 중 하나는 필수입니다.',
-      });
-    }
     if (!reqName) {
       return res.status(400).json({ ok: false, error: '이름을 입력해주세요.' });
     }
-    if (!email && !phone) {
-      return res.status(400).json({ ok: false, error: '이메일 또는 전화번호 중 하나는 필수입니다.' });
+    if (!phone) {
+      return res.status(400).json({ ok: false, error: '연락처를 입력해주세요.' });
+    }
+    if (!email) {
+      return res.status(400).json({ ok: false, error: '이메일을 입력해주세요.' });
+    }
+    if (!companyName) {
+      return res.status(400).json({ ok: false, error: '회사명을 입력해주세요.' });
+    }
+    if (!ceoName && !bzno) {
+      return res.status(400).json({
+        ok: false,
+        error: '대표자명 또는 사업자번호 중 하나는 필수입니다.',
+      });
     }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ ok: false, error: '올바른 이메일 형식을 입력해주세요.' });
