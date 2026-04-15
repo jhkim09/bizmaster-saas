@@ -45,7 +45,7 @@ export async function sendAdminAlert({ reqName, email, phone, company, ceoName, 
     const funds = (report?.policyFunds ?? []).map(f => `<li style="margin:6px 0;"><b>${esc(f.name)}</b> ${esc(f.amount)} — ${esc(f.match)}</li>`).join('');
 
     await send({
-      to: ['admin@mmtum.co.kr', 'arune@kakao.com'],
+      to: 'admin@mmtum.co.kr',
       subject: `[BizMaster] 새 진단 — ${company} (${esc(reqName)})`,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
