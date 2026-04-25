@@ -11,6 +11,7 @@ import {
   deactivateMember,
   getActiveMemberByEmail,
   getMemberUsage,
+  adjustUsage,
 } from '../services/membershipService.js';
 import { sendWelcomeMember } from '../services/emailService.js';
 import logger from '../utils/logger.js';
@@ -134,6 +135,28 @@ router.delete('/members/:id', requireAdmin, async (req, res) => {
     res.json({ ok: true, data: updated });
   } catch (err) {
     logger.error(`DELETE /admin/members/:id 오류: ${err.message}`);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/** POST /api/admin/members/:id/usage — 사용량 가감 (관리자 수동) */
+router.post('/members/:id/usage', requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ ok: false, error: '유효하지 않은 id' });
+
+    const { aiDelta = 0, premiumDelta = 0 } = req.body ?? {};
+    if (!Number.isInteger(aiDelta) || !Number.isInteger(premiumDelta)) {
+      return res.status(400).json({ ok: false, error: 'aiDelta/premiumDelta는 정수여야 합니다.' });
+    }
+    if (aiDelta === 0 && premiumDelta === 0) {
+      return res.status(400).json({ ok: false, error: '변경할 값이 없습니다.' });
+    }
+
+    const updated = await adjustUsage(id, { aiDelta, premiumDelta });
+    res.json({ ok: true, data: updated });
+  } catch (err) {
+    logger.error(`POST /admin/members/:id/usage 오류: ${err.message}`);
     res.status(500).json({ ok: false, error: err.message });
   }
 });

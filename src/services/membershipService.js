@@ -27,28 +27,48 @@ const PLAN_QUOTA = {
 };
 
 /**
+ * 가입일(starts_at) 기준 현재 사이클 시작일 계산
+ * 예: starts_at=4/25, 오늘=5/30 → cycleStart=5/25
+ *     starts_at=4/25, 오늘=5/10 → cycleStart=4/25 (아직 다음 사이클 시작 안 됨)
+ */
+function computeCurrentCycleStart(startsAt, now) {
+  const monthsDiff =
+    (now.getFullYear() - startsAt.getFullYear()) * 12 +
+    (now.getMonth() - startsAt.getMonth());
+  const candidate = new Date(startsAt);
+  candidate.setMonth(candidate.getMonth() + monthsDiff);
+  // candidate가 미래면 한 달 빼기 (이번 달 사이클이 아직 안 시작됨)
+  if (candidate > now) {
+    candidate.setMonth(candidate.getMonth() - 1);
+  }
+  return candidate;
+}
+
+/**
  * 월별 쿼터 리셋 처리 (조회 시점에 필요하면 자동 리셋)
- * quota_reset_at이 현재 월과 다르면 사용량 초기화
+ * 가입일(starts_at) 기준 사이클로 동작.
+ * 새 사이클이 시작되었는데 quota_reset_at이 그 이전이면 사용량 0으로 초기화.
  */
 async function resetMonthlyQuotaIfNeeded(client, member) {
   const now = new Date();
-  const resetAt = member.quota_reset_at ? new Date(member.quota_reset_at) : new Date(0);
-  const sameMonth =
-    resetAt.getFullYear() === now.getFullYear() &&
-    resetAt.getMonth()    === now.getMonth();
+  const startsAt = member.starts_at
+    ? new Date(member.starts_at)
+    : new Date(member.created_at || now);
+  const cycleStart = computeCurrentCycleStart(startsAt, now);
+  const lastReset = member.quota_reset_at
+    ? new Date(member.quota_reset_at)
+    : new Date(0);
 
-  if (sameMonth) return member; // 리셋 불필요
+  if (lastReset >= cycleStart) return member; // 이미 이번 사이클에서 리셋됨
 
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .slice(0, 10);
+  const cycleStartStr = cycleStart.toISOString().slice(0, 10);
 
   const { data, error } = await client
     .from('memberships')
     .update({
       used_ai_this_month:      0,
       used_premium_this_month: 0,
-      quota_reset_at:          firstOfMonth,
+      quota_reset_at:          cycleStartStr,
     })
     .eq('id', member.id)
     .select()
@@ -58,7 +78,7 @@ async function resetMonthlyQuotaIfNeeded(client, member) {
     logger.error(`쿼터 리셋 실패 (id=${member.id}): ${error.message}`);
     return member; // 실패해도 원본 반환 (가용성 우선)
   }
-  logger.info(`월별 쿼터 리셋 완료: ${member.email}`);
+  logger.info(`월별 쿼터 리셋 완료: ${member.email} (사이클 시작: ${cycleStartStr})`);
   return data;
 }
 
@@ -261,6 +281,63 @@ export async function updateMember(id, fields) {
  */
 export async function deactivateMember(id) {
   return updateMember(id, { is_active: false });
+}
+
+/**
+ * 사용량 가감 (관리자 수동 조정)
+ * @param {number} id
+ * @param {{ aiDelta?: number, premiumDelta?: number }} deltas
+ */
+export async function adjustUsage(id, { aiDelta = 0, premiumDelta = 0 } = {}) {
+  const client = getClient();
+  if (!client) throw new Error('Supabase 미설정');
+
+  const { data: m, error: e1 } = await client
+    .from('memberships')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (e1) throw new Error(e1.message);
+
+  const newAi  = Math.max(0, (m.used_ai_this_month ?? 0)      + aiDelta);
+  const newPre = Math.max(0, (m.used_premium_this_month ?? 0) + premiumDelta);
+
+  const { data, error } = await client
+    .from('memberships')
+    .update({
+      used_ai_this_month:      newAi,
+      used_premium_this_month: newPre,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+
+  // 사용 이력 로그 기록 (관리자 수동 조정으로 표시)
+  if (aiDelta !== 0 || premiumDelta !== 0) {
+    const entries = [];
+    if (aiDelta !== 0) {
+      entries.push({
+        membership_id: id,
+        email:         m.email,
+        service_type:  'ai_report',
+        metadata:      { source: 'admin_manual', delta: aiDelta },
+      });
+    }
+    if (premiumDelta !== 0) {
+      entries.push({
+        membership_id: id,
+        email:         m.email,
+        service_type:  'premium_report',
+        metadata:      { source: 'admin_manual', delta: premiumDelta },
+      });
+    }
+    if (entries.length) {
+      await client.from('membership_usage').insert(entries);
+    }
+  }
+
+  return data;
 }
 
 /**
