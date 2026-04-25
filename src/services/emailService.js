@@ -127,6 +127,110 @@ export async function sendAdminAlert({ reqName, email, phone, company, ceoName, 
 }
 
 /**
+ * 멤버십 가입 환영 이메일
+ */
+export async function sendWelcomeMember({ email, name, plan, expiresAt, quotaAi, quotaPremium }) {
+  try {
+    const planLabel = plan === 'premium' ? '프리미엄' : '스탠다드';
+    const displayName = name ? esc(name) : '고객';
+    const expiryText = expiresAt
+      ? new Date(expiresAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+      : '-';
+
+    const benefitHtml = plan === 'premium'
+      ? `
+        <li style="margin:8px 0;padding:10px 14px;background:#f0fdf4;border-left:3px solid #22c55e;border-radius:4px;">
+          <b style="color:#166534;">AI 심화 분석 보고서</b> — 월 ${quotaAi}회 무료 이용
+        </li>
+        <li style="margin:8px 0;padding:10px 14px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:4px;">
+          <b style="color:#1e40af;">20만원 AI 보고서</b> — 월 ${quotaPremium}회 무료 제공
+        </li>`
+      : `
+        <li style="margin:8px 0;padding:10px 14px;background:#f0fdf4;border-left:3px solid #22c55e;border-radius:4px;">
+          <b style="color:#166534;">AI 심화 분석 보고서</b> — 월 ${quotaAi}회 무료 이용
+        </li>
+        <li style="margin:8px 0;padding:10px 14px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:4px;">
+          <b style="color:#1e40af;">20만원 AI 보고서</b> — 50% 할인 (카카오 상담 시 안내)
+        </li>`;
+
+    await send({
+      to: email,
+      subject: `[Momentum Biz] 멤버십 활성화 완료 — ${planLabel}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+          <div style="background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+            <h1 style="color:#fff;margin:0;font-size:22px;">Momentum Biz</h1>
+            <p style="color:#93c5fd;margin:6px 0 0;font-size:13px;">BizMaster AI 멤버십</p>
+          </div>
+
+          <div style="background:#fff;padding:32px 24px;border:1px solid #e2e8f0;border-top:none;">
+            <h2 style="color:#1e293b;font-size:18px;margin-top:0;">
+              ${displayName}님, 멤버십이 활성화되었습니다!
+            </h2>
+            <p style="color:#475569;line-height:1.7;">
+              <b style="color:#2563eb;">${planLabel} 멤버십</b>이 성공적으로 등록되었습니다.<br>
+              아래 혜택을 즉시 이용하실 수 있습니다.
+            </p>
+
+            <div style="background:#f8fafc;border-radius:8px;padding:20px;margin:20px 0;">
+              <h3 style="color:#1e293b;margin-top:0;font-size:15px;">플랜 혜택</h3>
+              <ul style="list-style:none;padding:0;margin:0;">
+                ${benefitHtml}
+              </ul>
+            </div>
+
+            <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+              <tr style="background:#f1f5f9;">
+                <td style="padding:10px 14px;font-weight:bold;color:#475569;font-size:13px;">플랜</td>
+                <td style="padding:10px 14px;color:#1e293b;font-size:13px;">${planLabel}</td>
+              </tr>
+              <tr>
+                <td style="padding:10px 14px;font-weight:bold;color:#475569;font-size:13px;">만료일</td>
+                <td style="padding:10px 14px;color:#1e293b;font-size:13px;">${expiryText}</td>
+              </tr>
+              <tr style="background:#f1f5f9;">
+                <td style="padding:10px 14px;font-weight:bold;color:#475569;font-size:13px;">이용 방법</td>
+                <td style="padding:10px 14px;color:#1e293b;font-size:13px;">
+                  <a href="https://bizmaster.mmtum.co.kr" style="color:#2563eb;">bizmaster.mmtum.co.kr</a> 또는<br>
+                  <a href="https://mmtum.co.kr/consulting.html" style="color:#2563eb;">mmtum.co.kr/consulting.html</a><br>
+                  <span style="color:#64748b;font-size:12px;">→ 본 이메일(${esc(email)}) 입력 시 자동으로 멤버십 혜택 적용</span>
+                </td>
+              </tr>
+            </table>
+
+            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:16px;margin:20px 0;">
+              <p style="margin:0;color:#92400e;font-size:13px;line-height:1.6;">
+                <b>갱신 안내</b><br>
+                만료 임박 시 카카오 채널(<a href="https://mmtum.co.kr" style="color:#d97706;">mmtum.co.kr</a>)로 상담 요청해 주시면<br>
+                운영자가 갱신 처리해 드립니다.
+              </p>
+            </div>
+
+            <div style="text-align:center;margin-top:28px;">
+              <a href="https://bizmaster.mmtum.co.kr"
+                 style="display:inline-block;background:#2563eb;color:#fff;font-weight:bold;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:14px;">
+                지금 바로 이용하기
+              </a>
+            </div>
+          </div>
+
+          <div style="background:#f8fafc;padding:16px 24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;text-align:center;">
+            <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.6;">
+              문의: <a href="mailto:admin@mmtum.co.kr" style="color:#64748b;">admin@mmtum.co.kr</a><br>
+              Momentum Biz · 에이룬컴퍼니 · <a href="https://mmtum.co.kr" style="color:#64748b;">mmtum.co.kr</a>
+            </p>
+          </div>
+        </div>
+      `,
+    });
+    logger.info(`환영 이메일 발송 완료: ${email} (${plan})`);
+  } catch (err) {
+    logger.error(`환영 이메일 발송 실패: ${err.message}`);
+    throw err;
+  }
+}
+
+/**
  * 요청자 확인 메일 — 진단 결과 요약
  */
 export async function sendUserConfirm({ reqName, email, company, report }) {

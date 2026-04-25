@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BizMaster 관리자 — 멤버십 관리</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            accent:  '#38bdf8',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+    .tab-btn.active { background: #2563eb; color: #fff; }
+    .toast { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    input, select, textarea {
+      background: #1e293b !important;
+      color: #e2e8f0 !important;
+      border-color: #334155 !important;
+    }
+    input::placeholder, textarea::placeholder { color: #64748b; }
+    tr:hover td { background: #1e293b; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- Toast 알림 -->
+<div id="toastArea" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-xs"></div>
+
+<!-- Header -->
+<header class="bg-slate-900 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+      </svg>
+    </div>
+    <span class="font-bold text-white">BizMaster 관리자</span>
+    <span class="text-xs text-slate-500 ml-2">멤버십 관리</span>
+  </div>
+  <button id="logoutBtn" class="hidden text-xs text-slate-400 hover:text-white border border-slate-600 rounded px-3 py-1.5 transition-colors">로그아웃</button>
+</header>
+
+<!-- 탭 -->
+<nav id="tabNav" class="hidden bg-slate-900 border-b border-slate-700 px-6 pt-4 flex gap-2">
+  <button class="tab-btn active text-sm font-medium px-4 py-2 rounded-t-lg transition-colors" data-tab="list">멤버 목록</button>
+  <button class="tab-btn text-sm font-medium px-4 py-2 rounded-t-lg text-slate-400 hover:text-white transition-colors" data-tab="add">멤버 추가</button>
+</nav>
+
+<main class="max-w-5xl mx-auto px-4 py-8">
+
+  <!-- ── 로그인 뷰 ───────────────────────────────────────── -->
+  <div id="viewLogin" class="max-w-sm mx-auto mt-12">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8">
+      <h2 class="text-xl font-bold text-white mb-1">관리자 로그인</h2>
+      <p class="text-slate-400 text-sm mb-6">BizMaster 멤버십 관리 시스템</p>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm text-slate-300 mb-1.5">비밀번호</label>
+          <input id="loginPassword" type="password" placeholder="관리자 비밀번호 입력"
+            class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none" />
+        </div>
+        <p id="loginError" class="hidden text-red-400 text-xs"></p>
+        <button type="submit"
+          class="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3 text-sm transition-colors">
+          로그인
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── 멤버 목록 탭 ─────────────────────────────────────── -->
+  <div id="viewList" class="hidden">
+    <!-- 검색/필터 -->
+    <div class="flex flex-wrap gap-3 mb-5">
+      <input id="searchInput" type="text" placeholder="이메일 또는 이름 검색..."
+        class="border rounded-xl px-4 py-2.5 text-sm flex-1 min-w-[200px] focus:ring-2 focus:ring-primary/50 outline-none" />
+      <select id="statusFilter" class="border rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none">
+        <option value="all">전체</option>
+        <option value="active">활성</option>
+        <option value="expired">만료됨</option>
+        <option value="inactive">비활성</option>
+      </select>
+      <button id="refreshBtn" class="bg-slate-700 hover:bg-slate-600 text-white rounded-xl px-4 py-2.5 text-sm transition-colors">
+        새로고침
+      </button>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-slate-900 text-slate-400 text-xs uppercase tracking-wide">
+              <th class="text-left px-5 py-3.5">이름 / 이메일</th>
+              <th class="text-left px-4 py-3.5">플랜</th>
+              <th class="text-left px-4 py-3.5">만료일</th>
+              <th class="text-left px-4 py-3.5">AI 잔여</th>
+              <th class="text-left px-4 py-3.5">프리미엄 잔여</th>
+              <th class="text-left px-4 py-3.5">상태</th>
+              <th class="text-left px-4 py-3.5">액션</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody">
+            <tr>
+              <td colspan="7" class="px-5 py-8 text-center text-slate-500 text-sm">불러오는 중...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p id="memberCount" class="text-xs text-slate-500 mt-2 text-right"></p>
+  </div>
+
+  <!-- ── 멤버 추가 탭 ─────────────────────────────────────── -->
+  <div id="viewAdd" class="hidden max-w-lg">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-7">
+      <h2 class="text-lg font-bold text-white mb-5">신규 멤버 등록</h2>
+      <form id="addForm" class="space-y-5">
+
+        <div>
+          <label class="block text-sm text-slate-300 mb-1.5">이메일 <span class="text-red-400">*</span></label>
+          <input id="addEmail" type="email" placeholder="member@example.com"
+            class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none" required />
+        </div>
+
+        <div>
+          <label class="block text-sm text-slate-300 mb-1.5">이름</label>
+          <input id="addName" type="text" placeholder="홍길동"
+            class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none" />
+        </div>
+
+        <!-- 플랜 -->
+        <div>
+          <label class="block text-sm text-slate-300 mb-2.5">플랜 <span class="text-red-400">*</span></label>
+          <div class="space-y-3">
+            <label class="flex items-start gap-3 cursor-pointer group">
+              <input type="radio" name="addPlan" value="standard" checked
+                class="mt-0.5 accent-primary w-4 h-4 cursor-pointer" />
+              <div>
+                <p class="text-white text-sm font-medium group-hover:text-accent transition-colors">스탠다드</p>
+                <p class="text-slate-400 text-xs mt-0.5">AI 심화 보고서 월 10회 무료 + 20만원 보고서 50% 할인</p>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 cursor-pointer group">
+              <input type="radio" name="addPlan" value="premium"
+                class="mt-0.5 accent-primary w-4 h-4 cursor-pointer" />
+              <div>
+                <p class="text-white text-sm font-medium group-hover:text-accent transition-colors">프리미엄</p>
+                <p class="text-slate-400 text-xs mt-0.5">AI 심화 보고서 월 30회 무료 + 20만원 보고서 월 1회 무료</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 시작일 -->
+        <div>
+          <label class="block text-sm text-slate-300 mb-1.5">시작일</label>
+          <input id="addStartsAt" type="date"
+            class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none" />
+        </div>
+
+        <!-- 기간 -->
+        <div>
+          <label class="block text-sm text-slate-300 mb-2">기간</label>
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button type="button" class="duration-btn active bg-primary text-white rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors" data-months="1">1개월</button>
+            <button type="button" class="duration-btn bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors" data-months="3">3개월</button>
+            <button type="button" class="duration-btn bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors" data-months="6">6개월</button>
+            <button type="button" class="duration-btn bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-colors" data-months="12">12개월</button>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">만료일 (직접 입력 가능)</label>
+            <input id="addExpiresAt" type="date"
+              class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none" required />
+          </div>
+        </div>
+
+        <!-- 메모 -->
+        <div>
+          <label class="block text-sm text-slate-300 mb-1.5">메모</label>
+          <textarea id="addNote" rows="2" placeholder="내부 메모 (선택)"
+            class="w-full border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"></textarea>
+        </div>
+
+        <p id="addError" class="hidden text-red-400 text-xs"></p>
+
+        <button type="submit"
+          class="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3.5 text-sm transition-colors flex items-center justify-center gap-2">
+          <span id="addBtnText">등록 + 환영 메일 발송</span>
+          <div id="addSpinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        </button>
+        <p class="text-xs text-slate-500 text-center">등록 즉시 환영 이메일이 자동 발송됩니다</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── 멤버 상세 모달 ──────────────────────────────────────── -->
+  <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-7">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-white">멤버 상세</h3>
+        <button id="closeModal" class="text-slate-400 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const API = '';
+
+  // ── 유틸 ─────────────────────────────────────────────────────
+  function toast(msg, type = 'success') {
+    const el = document.createElement('div');
+    const color = type === 'success' ? 'bg-green-700' : 'bg-red-700';
+    el.className = `toast ${color} text-white text-sm rounded-xl px-4 py-3 shadow-lg max-w-xs`;
+    el.textContent = msg;
+    document.getElementById('toastArea').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  function esc(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function formatDate(str) {
+    if (!str) return '-';
+    return str.slice(0, 10);
+  }
+
+  function expiryClass(expiresAt, isActive) {
+    if (!isActive) return 'text-slate-500';
+    const today = new Date();
+    const exp   = new Date(expiresAt);
+    const diff  = (exp - today) / 86400000;
+    if (diff < 0)  return 'text-red-400 font-semibold';
+    if (diff <= 7) return 'text-yellow-400 font-semibold';
+    return 'text-green-400';
+  }
+
+  function statusBadge(member) {
+    if (!member.is_active) return '<span class="text-xs bg-slate-700 text-slate-400 rounded px-2 py-0.5">비활성</span>';
+    const today = new Date();
+    const exp   = new Date(member.expires_at);
+    if (exp < today) return '<span class="text-xs bg-red-900/50 text-red-400 border border-red-700/50 rounded px-2 py-0.5">만료</span>';
+    return '<span class="text-xs bg-green-900/50 text-green-400 border border-green-700/50 rounded px-2 py-0.5">활성</span>';
+  }
+
+  function planBadge(plan) {
+    return plan === 'premium'
+      ? '<span class="text-xs bg-violet-900/50 text-violet-300 border border-violet-700/50 rounded px-2 py-0.5">프리미엄</span>'
+      : '<span class="text-xs bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded px-2 py-0.5">스탠다드</span>';
+  }
+
+  // ── 인증 ─────────────────────────────────────────────────────
+  let isAdmin = false;
+
+  async function checkAuth() {
+    try {
+      const r = await fetch(`${API}/api/admin/me`, { credentials: 'include' });
+      const j = await r.json();
+      return j.authenticated === true;
+    } catch { return false; }
+  }
+
+  async function init() {
+    isAdmin = await checkAuth();
+    if (isAdmin) showAdminUI();
+    else showLoginUI();
+  }
+
+  function showLoginUI() {
+    document.getElementById('viewLogin').classList.remove('hidden');
+    document.getElementById('viewList').classList.add('hidden');
+    document.getElementById('viewAdd').classList.add('hidden');
+    document.getElementById('tabNav').classList.add('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+  }
+
+  function showAdminUI() {
+    document.getElementById('viewLogin').classList.add('hidden');
+    document.getElementById('tabNav').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    switchTab('list');
+  }
+
+  // 로그인 폼
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = document.getElementById('loginPassword').value;
+    const errEl = document.getElementById('loginError');
+    errEl.classList.add('hidden');
+    try {
+      const r = await fetch(`${API}/api/admin/login`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      const j = await r.json();
+      if (j.ok) { isAdmin = true; showAdminUI(); }
+      else { errEl.textContent = j.error || '로그인 실패'; errEl.classList.remove('hidden'); }
+    } catch (err) {
+      errEl.textContent = '네트워크 오류'; errEl.classList.remove('hidden');
+    }
+  });
+
+  // 로그아웃
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch(`${API}/api/admin/logout`, { method: 'POST', credentials: 'include' });
+    isAdmin = false;
+    showLoginUI();
+    toast('로그아웃되었습니다.', 'success');
+  });
+
+  // ── 탭 전환 ──────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      if (btn.dataset.tab === tab) btn.classList.add('active');
+      else { btn.classList.remove('active'); btn.classList.add('text-slate-400'); }
+    });
+    document.getElementById('viewList').classList.toggle('hidden', tab !== 'list');
+    document.getElementById('viewAdd').classList.toggle('hidden',  tab !== 'add');
+    if (tab === 'list') loadMembers();
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // ── 멤버 목록 ─────────────────────────────────────────────────
+  async function loadMembers() {
+    const search = document.getElementById('searchInput').value.trim();
+    const status = document.getElementById('statusFilter').value;
+    const params = new URLSearchParams({ search, status });
+    const tbody = document.getElementById('memberTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-slate-500 text-sm">불러오는 중...</td></tr>';
+
+    try {
+      const r = await fetch(`${API}/api/admin/members?${params}`, { credentials: 'include' });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error);
+      renderTable(j.data);
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" class="px-5 py-8 text-center text-red-400 text-sm">${esc(err.message)}</td></tr>`;
+    }
+  }
+
+  function renderTable(members) {
+    const tbody = document.getElementById('memberTableBody');
+    document.getElementById('memberCount').textContent = `총 ${members.length}명`;
+    if (!members.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="px-5 py-8 text-center text-slate-500 text-sm">등록된 멤버가 없습니다.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = members.map(m => {
+      const remAi      = Math.max(0, m.monthly_quota_ai_report - m.used_ai_this_month);
+      const remPremium = Math.max(0, m.monthly_quota_premium_report - m.used_premium_this_month);
+      const expClass   = expiryClass(m.expires_at, m.is_active);
+      return `
+        <tr class="border-t border-slate-700 cursor-pointer transition-colors" onclick="openDetail(${m.id}, '${esc(m.email)}')">
+          <td class="px-5 py-3.5">
+            <p class="text-white font-medium text-sm">${esc(m.name || '-')}</p>
+            <p class="text-slate-400 text-xs mt-0.5">${esc(m.email)}</p>
+          </td>
+          <td class="px-4 py-3.5">${planBadge(m.plan)}</td>
+          <td class="px-4 py-3.5 text-sm ${expClass}">${formatDate(m.expires_at)}</td>
+          <td class="px-4 py-3.5 text-sm text-slate-300">${remAi} / ${m.monthly_quota_ai_report}</td>
+          <td class="px-4 py-3.5 text-sm text-slate-300">${remPremium} / ${m.monthly_quota_premium_report}</td>
+          <td class="px-4 py-3.5">${statusBadge(m)}</td>
+          <td class="px-4 py-3.5">
+            <button onclick="event.stopPropagation(); deactivateConfirm(${m.id})"
+              class="text-xs text-red-400 hover:text-red-300 border border-red-800/50 rounded px-2 py-1 transition-colors ${m.is_active ? '' : 'opacity-40 pointer-events-none'}">
+              비활성화
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('searchInput').addEventListener('input', debounce(loadMembers, 400));
+  document.getElementById('statusFilter').addEventListener('change', loadMembers);
+  document.getElementById('refreshBtn').addEventListener('click', loadMembers);
+
+  // ── 멤버 추가 ─────────────────────────────────────────────────
+
+  // 시작일 default = 오늘
+  const todayStr = new Date().toISOString().slice(0, 10);
+  document.getElementById('addStartsAt').value = todayStr;
+
+  // 기간 버튼
+  let selectedDuration = 1;
+  updateExpiresAt();
+
+  document.querySelectorAll('.duration-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.duration-btn').forEach(b => {
+        b.classList.remove('bg-primary', 'text-white', 'active');
+        b.classList.add('bg-slate-700', 'text-slate-300');
+      });
+      btn.classList.add('bg-primary', 'text-white', 'active');
+      btn.classList.remove('bg-slate-700', 'text-slate-300');
+      selectedDuration = parseInt(btn.dataset.months, 10);
+      updateExpiresAt();
+    });
+  });
+
+  document.getElementById('addStartsAt').addEventListener('change', updateExpiresAt);
+
+  function updateExpiresAt() {
+    const starts = document.getElementById('addStartsAt').value || todayStr;
+    const d = new Date(starts);
+    d.setMonth(d.getMonth() + selectedDuration);
+    document.getElementById('addExpiresAt').value = d.toISOString().slice(0, 10);
+  }
+
+  document.getElementById('addForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('addError');
+    errEl.classList.add('hidden');
+    const btnText = document.getElementById('addBtnText');
+    const spinner = document.getElementById('addSpinner');
+    btnText.textContent = '처리 중...';
+    spinner.classList.remove('hidden');
+
+    const body = {
+      email:     document.getElementById('addEmail').value.trim(),
+      name:      document.getElementById('addName').value.trim() || null,
+      plan:      document.querySelector('input[name="addPlan"]:checked').value,
+      startsAt:  document.getElementById('addStartsAt').value,
+      expiresAt: document.getElementById('addExpiresAt').value,
+      note:      document.getElementById('addNote').value.trim() || null,
+    };
+
+    try {
+      const r = await fetch(`${API}/api/admin/members`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.error || '등록 실패');
+      toast(`${body.email} 등록 완료! 환영 이메일 발송 중...`, 'success');
+      document.getElementById('addForm').reset();
+      document.getElementById('addStartsAt').value = todayStr;
+      updateExpiresAt();
+      switchTab('list');
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.classList.remove('hidden');
+    } finally {
+      btnText.textContent = '등록 + 환영 메일 발송';
+      spinner.classList.add('hidden');
+    }
+  });
+
+  // ── 멤버 상세 모달 ────────────────────────────────────────────
+  async function openDetail(id, email) {
+    const modal   = document.getElementById('detailModal');
+    const content = document.getElementById('detailContent');
+    modal.classList.remove('hidden');
+    content.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">불러오는 중...</p>';
+
+    try {
+      const [membersRes, usageRes] = await Promise.all([
+        fetch(`${API}/api/admin/members?search=${encodeURIComponent(email)}`, { credentials: 'include' }),
+        fetch(`${API}/api/admin/members/${encodeURIComponent(email)}/usage`, { credentials: 'include' }),
+      ]);
+      const membersJson = await membersRes.json();
+      const usageJson   = await usageRes.json();
+
+      const m     = (membersJson.data || []).find(x => x.id === id) || {};
+      const usage = usageJson.data || [];
+
+      const remAi  = Math.max(0, (m.monthly_quota_ai_report || 0) - (m.used_ai_this_month || 0));
+      const remPre = Math.max(0, (m.monthly_quota_premium_report || 0) - (m.used_premium_this_month || 0));
+
+      content.innerHTML = `
+        <div class="space-y-5">
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div class="bg-slate-700/50 rounded-xl p-3">
+              <p class="text-slate-400 text-xs mb-1">이름</p>
+              <p class="text-white font-medium">${esc(m.name || '-')}</p>
+            </div>
+            <div class="bg-slate-700/50 rounded-xl p-3">
+              <p class="text-slate-400 text-xs mb-1">플랜</p>
+              <p>${planBadge(m.plan)}</p>
+            </div>
+            <div class="bg-slate-700/50 rounded-xl p-3 col-span-2">
+              <p class="text-slate-400 text-xs mb-1">이메일</p>
+              <p class="text-white font-medium">${esc(m.email)}</p>
+            </div>
+            <div class="bg-slate-700/50 rounded-xl p-3">
+              <p class="text-slate-400 text-xs mb-1">만료일</p>
+              <p class="text-white ${expiryClass(m.expires_at, m.is_active)}">${formatDate(m.expires_at)}</p>
+            </div>
+            <div class="bg-slate-700/50 rounded-xl p-3">
+              <p class="text-slate-400 text-xs mb-1">상태</p>
+              <p>${statusBadge(m)}</p>
+            </div>
+            <div class="bg-slate-700/50 rounded-xl p-3">
+              <p class="text-slate-400 text-xs mb-1">AI 잔여</p>
+              <p class="text-white font-medium">${remAi} / ${m.monthly_quota_ai_report || 0}회</p>
+            </div>
+            <div class="bg-slate-700/50 rounded-xl p-3">
+              <p class="text-slate-400 text-xs mb-1">프리미엄 잔여</p>
+              <p class="text-white font-medium">${remPre} / ${m.monthly_quota_premium_report || 0}회</p>
+            </div>
+          </div>
+
+          ${m.note ? `<div class="bg-slate-700/30 rounded-xl p-3 text-sm text-slate-300">${esc(m.note)}</div>` : ''}
+
+          <!-- 기간 연장 -->
+          <div class="border border-slate-700 rounded-xl p-4">
+            <h4 class="text-sm font-semibold text-white mb-3">기간 연장</h4>
+            <div class="flex gap-2 flex-wrap">
+              ${[1,3,6,12].map(mo => `
+                <button onclick="extendMember(${id}, ${mo})"
+                  class="text-xs bg-slate-700 hover:bg-primary text-slate-300 hover:text-white rounded-lg px-3 py-1.5 transition-colors">
+                  +${mo}개월
+                </button>`).join('')}
+            </div>
+          </div>
+
+          <!-- 사용 이력 -->
+          <div>
+            <h4 class="text-sm font-semibold text-white mb-2">최근 사용 이력</h4>
+            ${usage.length
+              ? `<div class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                  ${usage.map(u => `
+                    <div class="flex items-center justify-between text-xs text-slate-400 bg-slate-700/30 rounded-lg px-3 py-2">
+                      <span>${esc(u.service_type)}</span>
+                      <span>${u.used_at?.slice(0,16).replace('T',' ') || '-'}</span>
+                    </div>`).join('')}
+                </div>`
+              : '<p class="text-slate-500 text-xs">사용 이력이 없습니다.</p>'}
+          </div>
+
+          <!-- 위험 액션 -->
+          <button onclick="deactivateConfirm(${id})"
+            class="w-full text-sm text-red-400 hover:text-red-300 border border-red-800/50 hover:border-red-600/50 rounded-xl py-2.5 transition-colors mt-2">
+            멤버 비활성화
+          </button>
+        </div>`;
+    } catch (err) {
+      content.innerHTML = `<p class="text-red-400 text-sm text-center py-8">${esc(err.message)}</p>`;
+    }
+  }
+
+  document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('detailModal').classList.add('hidden');
+  });
+  document.getElementById('detailModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('detailModal')) {
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+  });
+
+  // 기간 연장
+  async function extendMember(id, months) {
+    try {
+      // 현재 만료일 조회
+      const r = await fetch(`${API}/api/admin/members?search=`, { credentials: 'include' });
+      const j = await r.json();
+      const m = (j.data || []).find(x => x.id === id);
+      if (!m) throw new Error('멤버 조회 실패');
+
+      const exp = new Date(m.expires_at);
+      const today = new Date();
+      const base = exp > today ? exp : today;
+      base.setMonth(base.getMonth() + months);
+      const newExp = base.toISOString().slice(0, 10);
+
+      const pr = await fetch(`${API}/api/admin/members/${id}`, {
+        method: 'PUT', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expires_at: newExp, is_active: true }),
+      });
+      const pj = await pr.json();
+      if (!pj.ok) throw new Error(pj.error);
+      toast(`만료일이 ${newExp}으로 연장되었습니다.`, 'success');
+      document.getElementById('detailModal').classList.add('hidden');
+      loadMembers();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // 비활성화
+  async function deactivateConfirm(id) {
+    if (!confirm('이 멤버를 비활성화하시겠습니까? (취소하려면 다시 활성화할 수 있습니다)')) return;
+    try {
+      const r = await fetch(`${API}/api/admin/members/${id}`, {
+        method: 'DELETE', credentials: 'include',
+      });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error);
+      toast('비활성화 완료', 'success');
+      document.getElementById('detailModal').classList.add('hidden');
+      loadMembers();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // ── 유틸: debounce ────────────────────────────────────────────
+  function debounce(fn, delay) {
+    let timer;
+    return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+  }
+
+  // 전역 노출 (onclick 속성에서 호출)
+  window.openDetail        = openDetail;
+  window.deactivateConfirm = deactivateConfirm;
+  window.extendMember      = extendMember;
+
+  // 초기화
+  init();
+</script>
+</body>
+</html>

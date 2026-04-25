@@ -5,6 +5,7 @@ import { isDuplicate, saveLog } from '../services/supabaseService.js';
 import { sendAdminAlert, sendUserConfirm } from '../services/emailService.js';
 import { sendUserLms } from '../services/smsService.js';
 import { dailyRateLimit } from '../middleware/rateLimit.js';
+import { getActiveMemberByEmail, recordUsage } from '../services/membershipService.js';
 import logger from '../utils/logger.js';
 
 const router = Router();
@@ -21,9 +22,24 @@ function getClientIp(req) {
  * POST /api/diagnose
  * Body: { bzno?, companyName?, ceoName?, reqName, email, phone? }
  */
-router.post('/diagnose', dailyRateLimit, async (req, res) => {
+router.post('/diagnose', async (req, res) => {
   try {
     const { bzno, companyName, ceoName, reqName, email, phone } = req.body ?? {};
+
+    // 멤버십 확인 — 활성 멤버이면 rate limit 우회
+    let activeMember = null;
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      activeMember = await getActiveMemberByEmail(email).catch(() => null);
+    }
+
+    // 비멤버에게만 rate limit 적용
+    if (!activeMember) {
+      await new Promise((resolve, reject) => {
+        dailyRateLimit(req, res, (err) => (err ? reject(err) : resolve()));
+      });
+      // dailyRateLimit이 이미 응답을 보냈으면 여기서 종료
+      if (res.headersSent) return;
+    }
 
     // 1. 입력 검증
     if (!reqName) {
@@ -86,8 +102,23 @@ router.post('/diagnose', dailyRateLimit, async (req, res) => {
     if (email) sendUserConfirm({ reqName, email, company, report }).catch(e => logger.error(`확인메일 실패: ${e.message}`));
     if (phone) sendUserLms({ reqName, phone, company, report }).catch(e => logger.error(`LMS 실패: ${e.message}`));
 
-    // 6. 응답
-    res.json({ ok: true, data: report });
+    // 멤버십 사용량 기록
+    if (activeMember) {
+      recordUsage(activeMember, 'simple_analysis', { company, bzno }).catch(e =>
+        logger.error(`멤버십 사용량 기록 실패: ${e.message}`)
+      );
+    }
+
+    // 6. 응답 (멤버이면 멤버십 정보 포함)
+    const memberInfo = activeMember
+      ? {
+          plan:              activeMember.plan,
+          remaining_ai:      Math.max(0, activeMember.monthly_quota_ai_report - activeMember.used_ai_this_month),
+          remaining_premium: Math.max(0, activeMember.monthly_quota_premium_report - activeMember.used_premium_this_month),
+        }
+      : null;
+
+    res.json({ ok: true, data: report, member: memberInfo });
   } catch (err) {
     logger.error(`POST /api/diagnose 오류: ${err.message}`, err);
     res.status(500).json({ ok: false, error: '진단 처리 중 오류가 발생했습니다.' });
