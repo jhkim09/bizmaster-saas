@@ -551,7 +551,12 @@
                 </div>
               </div>
             </div>
-            <p class="text-xs text-slate-500 mt-2">가입일(${formatDate(m.starts_at)}) 기준 매월 자동 초기화</p>
+            <p class="text-xs text-slate-500 mt-2">${(() => {
+              const day = m.starts_at ? new Date(m.starts_at).getDate() : 0;
+              return day > 28
+                ? `가입일 ${day}일 — 매월 1일 자동 초기화`
+                : `가입일(${formatDate(m.starts_at)}) 기준 매월 자동 초기화`;
+            })()}</p>
           </div>
 
           <!-- 기간 연장 -->

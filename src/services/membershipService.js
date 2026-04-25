@@ -30,8 +30,15 @@ const PLAN_QUOTA = {
  * 가입일(starts_at) 기준 현재 사이클 시작일 계산
  * 예: starts_at=4/25, 오늘=5/30 → cycleStart=5/25
  *     starts_at=4/25, 오늘=5/10 → cycleStart=4/25 (아직 다음 사이클 시작 안 됨)
+ *
+ * 가입일 day가 29~31일이면 모든 달에 존재하지 않으므로 매월 1일 리셋으로 정규화.
+ * (예: 1/31 가입 + setMonth(+1) → 3/2 로 넘어가는 JS 동작 회피)
  */
 function computeCurrentCycleStart(startsAt, now) {
+  if (startsAt.getDate() > 28) {
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+
   const monthsDiff =
     (now.getFullYear() - startsAt.getFullYear()) * 12 +
     (now.getMonth() - startsAt.getMonth());
