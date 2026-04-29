@@ -12,6 +12,7 @@ export const config = {
   supabase: {
     url: process.env.SUPABASE_URL,
     anonKey: process.env.SUPABASE_ANON_KEY,
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,  // RLS 우회용 (backend 전용)
   },
   aws: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,

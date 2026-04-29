@@ -10,12 +10,17 @@ let _client = null;
 
 function getClient() {
   if (!_client) {
-    const { url, anonKey } = config.supabase;
-    if (!url || !anonKey) {
+    const { url, serviceRoleKey, anonKey } = config.supabase;
+    // service_role 키 우선 (RLS 우회 — backend 전용 작업용), 없으면 anon으로 fallback
+    const key = serviceRoleKey || anonKey;
+    if (!url || !key) {
       logger.warn('Supabase 환경변수 미설정 — membershipService 비활성');
       return null;
     }
-    _client = createClient(url, anonKey);
+    if (!serviceRoleKey) {
+      logger.warn('SUPABASE_SERVICE_ROLE_KEY 미설정 — anon 키 사용 중 (RLS 활성화 시 작동 불가)');
+    }
+    _client = createClient(url, key);
   }
   return _client;
 }
