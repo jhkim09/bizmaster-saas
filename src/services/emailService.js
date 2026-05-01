@@ -47,6 +47,36 @@ function financialBlock(report) {
     ${obs ? `<ul style="color:#64748b;font-size:13px;">${obs}</ul>` : ''}`;
 }
 
+/** 5개 메인 섹션 (개괄식) HTML 블록 생성 */
+function sectionsBlock(report) {
+  const s = report?.sections;
+  if (!s) return '';
+  const order = ['management', 'sales', 'taxRefund', 'powerCost', 'policySupport'];
+  const colors = {
+    management:    { bg: '#eff6ff', bd: '#3b82f6', tx: '#1e40af' },
+    sales:         { bg: '#f0fdf4', bd: '#22c55e', tx: '#166534' },
+    taxRefund:     { bg: '#fef3c7', bd: '#f59e0b', tx: '#92400e' },
+    powerCost:     { bg: '#fef2f2', bd: '#ef4444', tx: '#991b1b' },
+    policySupport: { bg: '#f5f3ff', bd: '#8b5cf6', tx: '#5b21b6' },
+  };
+  return order.map(k => {
+    const sec = s[k];
+    if (!sec) return '';
+    const c = colors[k];
+    const bullets = (sec.bullets ?? []).map(b => `<li style="margin:6px 0;line-height:1.55;">${esc(b)}</li>`).join('');
+    if (!bullets && !sec.estimatedAmount) return '';
+    const amount = (k === 'taxRefund' && sec.estimatedAmount)
+      ? `<p style="margin:6px 0 8px;color:${c.tx};font-weight:bold;">예상 환급: ${esc(sec.estimatedAmount)}</p>`
+      : '';
+    return `
+      <div style="background:${c.bg};border-left:4px solid ${c.bd};padding:14px 16px;margin:14px 0;border-radius:6px;">
+        <h3 style="color:${c.tx};margin:0 0 8px;font-size:15px;">${esc(sec.title || k)}</h3>
+        ${amount}
+        <ul style="margin:0;padding-left:20px;color:#1e293b;font-size:13px;">${bullets}</ul>
+      </div>`;
+  }).join('');
+}
+
 /** 보험 추천 HTML 블록 생성 */
 function insuranceBlock(report) {
   const recs = report?.insuranceRecommendations ?? [];
@@ -66,61 +96,60 @@ function insuranceBlock(report) {
  */
 export async function sendAdminAlert({ reqName, email, phone, company, ceoName, bzno, report }) {
   try {
+    const adminTo = config.email?.adminNotify?.length
+      ? config.email.adminNotify
+      : ['admin@mmtum.co.kr'];
+
     const actions = (report?.actions ?? []).map((a) => `<li style="margin:6px 0;">${esc(a)}</li>`).join('');
-    const funds = (report?.policyFunds ?? []).map(f => `<li style="margin:6px 0;"><b>${esc(f.name)}</b> ${esc(f.amount)} — ${esc(f.match)}${f.deadline ? ` <span style="color:#f59e0b;">⏰ ${esc(f.deadline)}</span>` : ''}</li>`).join('');
     const years = (report?.reportingYears ?? []).length ? `<span style="font-size:11px;color:#64748b;"> · 결산 ${report.reportingYears.join(', ')}</span>` : '';
+    const headline = report?.headline ? `<p style="margin:0;color:#1e293b;font-weight:bold;font-size:15px;">${esc(report.headline)}</p>` : '';
 
     await send({
-      to: 'admin@mmtum.co.kr',
-      subject: `[BizMaster] 새 진단 — ${company} (${esc(reqName)})`,
+      to: adminTo,
+      subject: `[BizMaster 관리자] 신규 진단 — ${company} / ${reqName} (${email})`,
       html: `
-        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
-          <h2 style="color:#2563eb;">새 AI 진단 요청 접수</h2>
-          <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-            <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">요청자</td><td style="padding:8px 12px;">${esc(reqName)}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold;">이메일</td><td style="padding:8px 12px;">${esc(email)}</td></tr>
-            <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">연락처</td><td style="padding:8px 12px;">${esc(phone) || '미입력'}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold;">회사명</td><td style="padding:8px 12px;">${esc(company)}</td></tr>
-            <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">대표자명</td><td style="padding:8px 12px;">${esc(ceoName) || '미입력'}</td></tr>
-            <tr><td style="padding:8px 12px;font-weight:bold;">사업자번호</td><td style="padding:8px 12px;">${esc(bzno) || '미입력'}</td></tr>
-          </table>
-
-          <hr style="margin:24px 0;border:none;border-top:1px solid #e2e8f0;">
-          <h3 style="color:#64748b;font-size:13px;">아래는 고객에게 발송된 진단 결과와 동일한 내용입니다</h3>
-
-          <h2 style="color:#2563eb;">AI 경영진단 결과${years}</h2>
-          <p style="color:#334155;">${esc(reqName)}님, <b>${esc(company)}</b> 진단이 완료되었습니다.</p>
-
-          <div style="background:#f8fafc;border-left:4px solid #2563eb;padding:16px;margin:20px 0;border-radius:4px;">
-            <p style="margin:0;color:#1e293b;white-space:pre-line;">${esc(report?.summary ?? '')}</p>
+        <div style="font-family:sans-serif;max-width:640px;margin:0 auto;">
+          <div style="background:#1e293b;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;">
+            <p style="margin:0;font-size:11px;color:#94a3b8;letter-spacing:1px;">ADMIN NOTIFICATION</p>
+            <h2 style="margin:4px 0 0;font-size:18px;">신규 AI 진단 요청 접수</h2>
           </div>
+          <div style="padding:20px;background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;width:90px;">요청자</td><td style="padding:8px 12px;">${esc(reqName)}</td></tr>
+              <tr><td style="padding:8px 12px;font-weight:bold;">이메일</td><td style="padding:8px 12px;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
+              <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">연락처</td><td style="padding:8px 12px;">${esc(phone) || '미입력'}</td></tr>
+              <tr><td style="padding:8px 12px;font-weight:bold;">회사명</td><td style="padding:8px 12px;">${esc(company)}</td></tr>
+              <tr style="background:#f1f5f9;"><td style="padding:8px 12px;font-weight:bold;">대표자명</td><td style="padding:8px 12px;">${esc(ceoName) || '미입력'}</td></tr>
+              <tr><td style="padding:8px 12px;font-weight:bold;">사업자번호</td><td style="padding:8px 12px;">${esc(bzno) || '미입력'}</td></tr>
+            </table>
 
-          ${financialBlock(report)}
+            <hr style="margin:20px 0;border:none;border-top:1px solid #e2e8f0;">
+            <p style="color:#64748b;font-size:12px;margin:0 0 12px;">— 아래는 고객에게 발송된 진단 결과와 동일 —</p>
 
-          ${report?.taxRefund ? `
-          <h3 style="color:#1e293b;">세액공제 / 경정청구</h3>
-          <p style="color:#334155;">가능성: <b>${report.taxRefund.possible ? '있음' : '검토 필요'}</b> · ${esc(report.taxRefund.estimatedAmount ?? '')}</p>
-          <p style="color:#64748b;">${esc(Array.isArray(report.taxRefund.reasons) ? report.taxRefund.reasons.join(' · ') : (report.taxRefund.reason ?? ''))}</p>
-          ` : ''}
+            <h2 style="color:#2563eb;font-size:18px;margin:0 0 4px;">AI 경영진단 결과${years}</h2>
+            ${headline}
 
-          ${funds ? `<h3 style="color:#1e293b;">정책자금 매칭</h3><ul style="color:#334155;">${funds}</ul>` : ''}
+            ${financialBlock(report)}
 
-          ${report?.retainedEarnings ? `
-          <h3 style="color:#1e293b;">미처분이익잉여금 전략</h3>
-          <p style="color:#334155;">${esc(report.retainedEarnings.strategy ?? '')} (긴급도: <b>${esc(report.retainedEarnings.urgency ?? '-')}</b>)</p>
-          ${Array.isArray(report.retainedEarnings.tactics) && report.retainedEarnings.tactics.length ? `<ul style="color:#64748b;">${report.retainedEarnings.tactics.map(t => `<li style="margin:4px 0;">${esc(t)}</li>`).join('')}</ul>` : ''}
-          ` : ''}
+            ${sectionsBlock(report)}
 
-          ${insuranceBlock(report)}
+            ${report?.retainedEarnings ? `
+            <h3 style="color:#1e293b;">미처분이익잉여금 전략</h3>
+            <p style="color:#334155;">${esc(report.retainedEarnings.strategy ?? '')} (긴급도: <b>${esc(report.retainedEarnings.urgency ?? '-')}</b>)</p>
+            ${Array.isArray(report.retainedEarnings.tactics) && report.retainedEarnings.tactics.length ? `<ul style="color:#64748b;">${report.retainedEarnings.tactics.map(t => `<li style="margin:4px 0;">${esc(t)}</li>`).join('')}</ul>` : ''}
+            ` : ''}
 
-          ${actions ? `<h3 style="color:#1e293b;">즉시 실행 액션</h3><ol style="color:#334155;">${actions}</ol>` : ''}
+            ${insuranceBlock(report)}
 
-          <hr style="margin:20px 0;border:none;border-top:1px solid #e2e8f0;">
-          <p style="color:#94a3b8;font-size:12px;">BizMaster AI · mmtum.co.kr</p>
+            ${actions ? `<h3 style="color:#1e293b;">즉시 실행 액션</h3><ol style="color:#334155;">${actions}</ol>` : ''}
+
+            <hr style="margin:20px 0;border:none;border-top:1px solid #e2e8f0;">
+            <p style="color:#94a3b8;font-size:11px;">BizMaster AI · mmtum.co.kr · 수신: ${adminTo.map(esc).join(', ')}</p>
+          </div>
         </div>
       `,
     });
-    logger.info(`관리자 알림 발송 완료: ${company}`);
+    logger.info(`관리자 알림 발송 완료: ${company} → ${adminTo.join(', ')}`);
   } catch (err) {
     logger.error(`관리자 알림 발송 실패: ${err.message}`);
   }
@@ -236,9 +265,8 @@ export async function sendWelcomeMember({ email, name, plan, expiresAt, quotaAi,
 export async function sendUserConfirm({ reqName, email, company, report }) {
   try {
     const actions = (report?.actions ?? []).map((a) => `<li style="margin:6px 0;">${esc(a)}</li>`).join('');
-    const funds = (report?.policyFunds ?? []).map(f => `<li style="margin:6px 0;"><b>${esc(f.name)}</b> ${esc(f.amount)} — ${esc(f.match)}</li>`).join('');
-
     const years = (report?.reportingYears ?? []).length ? `<span style="font-size:11px;color:#64748b;"> · 결산 ${report.reportingYears.join(', ')}</span>` : '';
+    const headline = report?.headline ? `<p style="margin:0;color:#1e293b;font-weight:bold;font-size:15px;">${esc(report.headline)}</p>` : '';
 
     await send({
       to: email,
@@ -248,19 +276,11 @@ export async function sendUserConfirm({ reqName, email, company, report }) {
           <h2 style="color:#2563eb;">AI 경영진단 결과${years}</h2>
           <p style="color:#334155;">${esc(reqName)}님, <b>${esc(company)}</b> 진단이 완료되었습니다.</p>
 
-          <div style="background:#f8fafc;border-left:4px solid #2563eb;padding:16px;margin:20px 0;border-radius:4px;">
-            <p style="margin:0;color:#1e293b;white-space:pre-line;">${esc(report?.summary ?? '')}</p>
-          </div>
+          ${headline ? `<div style="background:#f8fafc;border-left:4px solid #2563eb;padding:14px 16px;margin:18px 0;border-radius:4px;">${headline}</div>` : ''}
 
           ${financialBlock(report)}
 
-          ${report?.taxRefund ? `
-          <h3 style="color:#1e293b;">세액공제 / 경정청구</h3>
-          <p style="color:#334155;">가능성: <b>${report.taxRefund.possible ? '있음' : '검토 필요'}</b> · ${esc(report.taxRefund.estimatedAmount ?? '')}</p>
-          <p style="color:#64748b;">${esc(Array.isArray(report.taxRefund.reasons) ? report.taxRefund.reasons.join(' · ') : (report.taxRefund.reason ?? ''))}</p>
-          ` : ''}
-
-          ${funds ? `<h3 style="color:#1e293b;">정책자금 매칭</h3><ul style="color:#334155;">${funds}</ul>` : ''}
+          ${sectionsBlock(report)}
 
           ${report?.retainedEarnings ? `
           <h3 style="color:#1e293b;">미처분이익잉여금 전략</h3>

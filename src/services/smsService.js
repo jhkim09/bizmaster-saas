@@ -17,26 +17,34 @@ function makeAuth() {
 }
 
 function formatLms({ reqName, company, report }) {
-  const tax = report?.taxRefund;
-  const funds = (report?.policyFunds ?? []).map(f => `- ${f.name} ${f.amount}`).join('\n');
+  const s = report?.sections ?? {};
+  const SECTIONS = [
+    ['management',    '경영관리'],
+    ['sales',         '매출관리·마케팅'],
+    ['taxRefund',     '경정청구·세액공제'],
+    ['powerCost',     '전력비'],
+    ['policySupport', '정책지원'],
+  ];
+
+  const sectionBlocks = SECTIONS.map(([key, label]) => {
+    const sec = s[key];
+    if (!sec) return '';
+    const bullets = (sec.bullets ?? []).filter(Boolean);
+    if (!bullets.length && !sec.estimatedAmount) return '';
+    const head = `■ ${label}`;
+    const amount = (key === 'taxRefund' && sec.estimatedAmount) ? `예상 환급: ${sec.estimatedAmount}` : '';
+    const items = bullets.map(b => `· ${b}`).join('\n');
+    return [head, amount, items].filter(Boolean).join('\n');
+  }).filter(Boolean).join('\n\n');
+
   const actions = (report?.actions ?? []).map((a, i) => `${i + 1}. ${a}`).join('\n');
-  const urgency = report?.retainedEarnings?.urgency ?? '-';
 
   const lines = [
     `[BizMaster AI] ${company} 진단 결과`,
     ``,
-    `■ 진단 요약`,
-    report?.summary ?? '-',
+    report?.headline ?? '',
     ``,
-    `■ 세액공제/경정청구`,
-    tax ? `가능성: ${tax.possible ? '있음' : '검토필요'} · ${tax.estimatedAmount ?? ''}` : '-',
-    tax?.reason ?? '',
-    ``,
-    `■ 정책자금 매칭`,
-    funds || '-',
-    ``,
-    `■ 잉여금 전략`,
-    `${report?.retainedEarnings?.strategy ?? '-'} (긴급도: ${urgency})`,
+    sectionBlocks || '-',
     ``,
     `■ 즉시 실행 액션`,
     actions || '-',
@@ -46,7 +54,7 @@ function formatLms({ reqName, company, report }) {
     `mmtum.co.kr`,
   ];
 
-  let text = lines.join('\n');
+  let text = lines.filter(l => l !== null && l !== undefined).join('\n');
   if (text.length > 1500) {
     text = text.slice(0, 1497) + '...';
   }

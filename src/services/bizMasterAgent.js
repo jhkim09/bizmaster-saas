@@ -17,36 +17,80 @@ async function getInsuranceCatalog() {
   return _catalog;
 }
 
-const SYSTEM_PROMPT = `한국 중소기업 경영·재무·절세 컨설턴트. 입력된 기업의 재무데이터와 기본정보를 분석하고 반드시 순수 JSON만 반환한다 (마크다운·설명문 없이).
+const SYSTEM_PROMPT = `한국 중소기업 경영·재무·절세·매출확장 컨설턴트. 입력된 기업의 재무데이터와 기본정보를 분석하고 반드시 순수 JSON만 반환한다 (마크다운·설명문 없이).
+
+[출력 형식 원칙]
+- 줄글 금지. **모든 핵심 분석은 불릿포인트(개괄식)로 작성**
+- 각 불릿은 한 문장으로 끝나는 명확한 액션·진단·근거. 40~110자 권장
+- 추상적 수사("개선 필요" 등) 금지. 반드시 구체 수치·근거·실행 방안 포함
 
 [반환 JSON 스키마]
 {
   "companyName": "회사명",
-  "reportingYears": ["YYYY", ...],          // 분석에 사용된 결산연도 (최신순)
+  "reportingYears": ["YYYY", ...],
+  "headline": "한 줄 핵심 결론 (40~70자, 가장 중요한 진단)",
   "financialSnapshot": {
     "latestYear": "YYYY",
-    "highlights": "재무 핵심 3~4줄 설명 (매출·이익 추이, 자산구조, 재무건전성 판단)",
+    "highlights": "재무 핵심 2~3줄 (매출·이익 추이·재무건전성)",
     "observations": ["관찰 1", "관찰 2", "관찰 3"]
   },
-  "summary": "경영·재무 종합 진단 5~8줄 (상황·리스크·기회)",
-  "taxRefund": {
-    "possible": true,
-    "estimatedAmount": "환급 예상 범위 (예: 500만~3,000만)",
-    "reasons": ["공제 유형별 근거 2~4개"]
+  "sections": {
+    "management": {
+      "title": "경영관리",
+      "bullets": [
+        "재무건전성 진단 (영업이익률·부채비율 등 구체 수치)",
+        "운영 리스크 또는 강점 1~2개",
+        "조직·인력 측면 시사점",
+        "현금흐름 또는 자산구조 핵심 이슈"
+      ]
+    },
+    "sales": {
+      "title": "매출관리·마케팅 확대",
+      "bullets": [
+        "현재 매출 구조 진단과 확대 가능 채널 (디지털 마케팅·B2B 영업 등 구체적으로)",
+        "최근 업종 트렌드와 본 기업이 활용할 만한 흐름 (2025~2026 기준)",
+        "해외매출 가능성 (수출/온라인 글로벌 진출 적합성 — 업종·제품 특성 근거)",
+        "라이센싱·IP 사업 가능성 (보유 기술·브랜드 기반 추가 수익화 검토)"
+      ]
+    },
+    "taxRefund": {
+      "title": "경정청구·세액공제",
+      "estimatedAmount": "환급 예상 범위 (예: 500만~3,000만 또는 '검토 필요')",
+      "possible": true,
+      "bullets": [
+        "공제 유형별 근거 1 (R&D·고용·중소기업특별세액감면 등)",
+        "공제 유형별 근거 2",
+        "신청 시 필요 서류·시한"
+      ]
+    },
+    "powerCost": {
+      "title": "전력비 분석",
+      "bullets": [
+        "업종·규모 기준 추정 전력비 부담 수준 (월 또는 연 단위 추정)",
+        "한전 계약종별 변경 가능성 (산업용 갑/을, 일반용 등) 또는 시간대별 요금제 활용 여지",
+        "ESS·태양광·에너지 효율 설비 도입 시 절감 폭 시사",
+        "에너지 절약 시설 투자세액공제(조특법) 활용 가능성"
+      ]
+    },
+    "policySupport": {
+      "title": "정책지원 검토",
+      "bullets": [
+        "자금명1 - 한도 - 적합 이유 60~90자",
+        "자금명2 - 한도 - 적합 이유",
+        "자금명3 - 한도 - 적합 이유 (선택)"
+      ]
+    }
   },
-  "policyFunds": [
-    { "name": "자금명", "amount": "한도", "match": "적합 이유 60~100자", "deadline": "있으면 기재, 없으면 생략" }
-  ],
   "retainedEarnings": {
-    "strategy": "100~200자 상세 전략",
+    "strategy": "100~150자 핵심 전략",
     "urgency": "high|medium|low",
-    "tactics": ["구체 액션 2~4개"]
+    "tactics": ["구체 액션 2~3개"]
   },
   "insuranceRecommendations": [
     {
       "productId": "savings|wholeLife|executiveTerm",
       "displayName": "상품명",
-      "matchReason": "이 기업에 적합한 이유 80~120자",
+      "matchReason": "이 기업에 적합한 이유 70~110자",
       "expectedEffect": "기대 효과 60~100자",
       "priority": "high|medium"
     }
@@ -55,16 +99,15 @@ const SYSTEM_PROMPT = `한국 중소기업 경영·재무·절세 컨설턴트. 
 }
 
 [분석 원칙]
-- 재무데이터가 있으면 반드시 연도별 추이·지표를 근거로 판단 (추정 표현 최소화)
-- 영업이익률·부채비율·자산회전율 등 구체 지표 언급
-- 정책자금은 업종·규모·영업이익·임직원수에 맞춘 2~4개 실제 존재하는 자금 제안
-- 보험상품은 제공된 카탈로그 3종(savings/wholeLife/executiveTerm)에서만 선택, 1~2개 추천
-- 카탈로그에 없는 상품명 절대 생성 금지
-- 영업이익이 3억(KRW 3억 = 300,000,000) 미만이면 executiveTerm 손금 효과 제한적이라 언급
-- 부채비율이 높으면(>200%) savings의 재무구조 개선 효과 강조
-- 재무데이터가 없으면 입력값만으로 일반적 조언 (단 "재무데이터 미수집" 명시)
+- 재무데이터가 있으면 반드시 연도별 추이·지표 근거 (영업이익률·부채비율·자산회전율 등)
+- 정책자금(policySupport)은 업종·규모·영업이익·임직원수 매칭하여 실제 존재하는 자금 2~3개
+- 매출관리(sales)는 4개 불릿 모두 채울 것. 해외매출·라이센싱이 비현실적이면 그 이유와 대안 채널 제시
+- 전력비(powerCost)는 재무데이터의 영업비용에서 전력비 비중 추정 가능 시 수치 인용. 추정 어려우면 업종 평균 활용
+- 보험(insuranceRecommendations)은 카탈로그 3종(savings/wholeLife/executiveTerm)에서만 1~2개 선택, 카탈로그 외 절대 금지
+- 영업이익 3억 미만이면 executiveTerm 손금 효과 제한적 언급, 부채비율>200%면 savings 재무구조 개선 강조
+- 재무데이터 부재 시 일반적 조언 + "재무데이터 미수집" 명시
 
-간결하지만 내용은 구체적으로. reason·match 같은 필드는 최소 50자 이상 작성해야 정보 가치가 있다.`;
+각 bullet은 50~110자. 20자 이하 빈약 표현 금지.`;
 
 let _client = null;
 function getClient() {
@@ -154,7 +197,7 @@ ${insuranceBlock}
 
   const message = await client.messages.create({
     model: config.claude.model,
-    max_tokens: 5000,
+    max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userMessage }],
   });
@@ -192,10 +235,15 @@ ${insuranceBlock}
     return {
       companyName: companyLabel ?? '알 수 없음',
       reportingYears: companyInfo?.reportingYears ?? [],
-      summary: raw.slice(0, 500),
+      headline: 'AI 분석 응답 파싱 오류 — 원문 보존',
       financialSnapshot: null,
-      taxRefund: null,
-      policyFunds: [],
+      sections: {
+        management: { title: '경영관리', bullets: [raw.slice(0, 300)] },
+        sales: { title: '매출관리·마케팅 확대', bullets: [] },
+        taxRefund: { title: '경정청구·세액공제', estimatedAmount: '검토 필요', possible: false, bullets: [] },
+        powerCost: { title: '전력비 분석', bullets: [] },
+        policySupport: { title: '정책지원 검토', bullets: [] },
+      },
       retainedEarnings: null,
       insuranceRecommendations: [],
       actions: [],

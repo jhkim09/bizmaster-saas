@@ -19,6 +19,13 @@ export const config = {
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     region: process.env.AWS_REGION || 'ap-northeast-2',
   },
+  email: {
+    // 관리자 알림 수신 주소 — 쉼표 구분으로 다중 지원. 미설정 시 admin@mmtum.co.kr 단독.
+    adminNotify: (process.env.ADMIN_NOTIFY_EMAIL || 'admin@mmtum.co.kr')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean),
+  },
   solapi: {
     apiKey: process.env.SOLAPI_API_KEY,
     apiSecret: process.env.SOLAPI_API_SECRET,
