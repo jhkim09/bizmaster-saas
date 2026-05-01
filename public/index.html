@@ -644,11 +644,16 @@
     document.getElementById('resCompanyName').textContent = data.companyName ?? '';
     document.getElementById('resHeadline').textContent = data.headline ?? data.summary ?? '';
 
-    // 결산 연도 배지
+    // 결산 연도 배지 — 최신년도 기준 표시 (배열 순서 무관)
     const yearBadge = document.getElementById('resReportingYear');
-    const years = data.reportingYears || [];
+    const years = (data.reportingYears || [])
+      .map(y => parseInt(String(y).match(/\d{4}/)?.[0], 10))
+      .filter(n => !isNaN(n))
+      .sort((a, b) => b - a);
     if (years.length) {
-      yearBadge.textContent = `기준: ${years[0]}년 결산 (${years.length}년치 분석)`;
+      const latest = years[0];
+      const yy = String(latest).slice(-2);
+      yearBadge.textContent = `기준: ${yy}년부터 ${years.length}년치 분석`;
       yearBadge.classList.remove('hidden');
     } else {
       yearBadge.classList.add('hidden');

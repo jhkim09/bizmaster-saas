@@ -36,6 +36,17 @@ async function send({ to, subject, html }) {
   await ses.send(command);
 }
 
+/** 결산연도 표시 — 최신순 정렬 + "24년부터 5년치" 형식 */
+function formatReportingYears(years) {
+  const arr = (years ?? [])
+    .map(y => parseInt(String(y).match(/\d{4}/)?.[0], 10))
+    .filter(n => !isNaN(n))
+    .sort((a, b) => b - a);
+  if (!arr.length) return '';
+  const yy = String(arr[0]).slice(-2);
+  return `<span style="font-size:11px;color:#64748b;"> · ${yy}년부터 ${arr.length}년치 분석</span>`;
+}
+
 /** 재무 스냅샷 HTML 블록 생성 */
 function financialBlock(report) {
   const snap = report?.financialSnapshot;
@@ -107,7 +118,7 @@ export async function sendAdminAlert({ reqName, email, phone, company, ceoName, 
       : ['admin@mmtum.co.kr'];
 
     const actions = (report?.actions ?? []).map((a) => `<li style="margin:6px 0;">${esc(a)}</li>`).join('');
-    const years = (report?.reportingYears ?? []).length ? `<span style="font-size:11px;color:#64748b;"> · 결산 ${report.reportingYears.join(', ')}</span>` : '';
+    const years = formatReportingYears(report?.reportingYears);
     const headline = report?.headline ? `<p style="margin:0;color:#1e293b;font-weight:bold;font-size:15px;">${esc(report.headline)}</p>` : '';
 
     await send({
@@ -271,7 +282,7 @@ export async function sendWelcomeMember({ email, name, plan, expiresAt, quotaAi,
 export async function sendUserConfirm({ reqName, email, company, report }) {
   try {
     const actions = (report?.actions ?? []).map((a) => `<li style="margin:6px 0;">${esc(a)}</li>`).join('');
-    const years = (report?.reportingYears ?? []).length ? `<span style="font-size:11px;color:#64748b;"> · 결산 ${report.reportingYears.join(', ')}</span>` : '';
+    const years = formatReportingYears(report?.reportingYears);
     const headline = report?.headline ? `<p style="margin:0;color:#1e293b;font-weight:bold;font-size:15px;">${esc(report.headline)}</p>` : '';
 
     await send({
