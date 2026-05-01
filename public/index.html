@@ -289,6 +289,37 @@
           <p id="privacyError" class="hidden text-red-400 text-xs mt-2">개인정보 수집·이용에 동의해주세요.</p>
         </div>
 
+        <!-- ========== LOADING BOX (분석 버튼 바로 위) ========== -->
+        <div id="loadingBox" class="hidden w-full mt-2">
+          <div class="bg-white/5 border border-white/10 rounded-2xl px-5 py-6 flex flex-col items-center gap-4">
+            <div class="spinner" style="width:36px;height:36px;"></div>
+            <div class="text-center">
+              <p class="text-white font-medium text-sm">AI가 기업정보를 분석중입니다...</p>
+              <p class="text-slate-500 text-xs mt-1.5">AI 진단 생성 중 · 최대 120초 소요 · 페이지를 닫지 말고 기다려주세요</p>
+            </div>
+            <div class="w-full mt-1 space-y-2" id="loadingSteps">
+              <div class="flex items-center gap-3 text-xs text-slate-400">
+                <span class="w-4 h-4 rounded-full bg-primary/30 border border-primary/50 flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-accent dot-pulse"></span>
+                </span>
+                기업정보 데이터베이스 조회 중...
+              </div>
+              <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span class="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                </span>
+                AI 세액공제 가능성 분석
+              </div>
+              <div class="flex items-center gap-3 text-xs text-slate-500">
+                <span class="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                </span>
+                정책자금 매칭 및 잉여금 전략 수립
+              </div>
+            </div>
+          </div>
+        </div>
+
         <button
           type="submit"
           id="submitBtn"
@@ -311,38 +342,6 @@
         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
       <span id="errorMsg"></span>
-    </div>
-  </div>
-
-  <!-- ========== LOADING BOX ========== -->
-  <div id="loadingBox" class="hidden w-full max-w-lg px-4 sm:px-0 mt-8">
-    <div class="bg-white/5 border border-white/10 rounded-2xl px-6 py-8 flex flex-col items-center gap-4">
-      <div class="spinner" style="width:40px;height:40px;"></div>
-      <div class="text-center">
-        <p class="text-white font-medium text-sm">AI가 기업정보를 분석중입니다...</p>
-        <p class="text-slate-500 text-xs mt-1.5">AI 진단 생성 중 · 최대 120초 소요 · 페이지를 닫지 말고 기다려주세요</p>
-      </div>
-      <!-- Progress steps -->
-      <div class="w-full mt-2 space-y-2" id="loadingSteps">
-        <div class="flex items-center gap-3 text-xs text-slate-400">
-          <span class="w-4 h-4 rounded-full bg-primary/30 border border-primary/50 flex items-center justify-center shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-accent dot-pulse"></span>
-          </span>
-          기업정보 데이터베이스 조회 중...
-        </div>
-        <div class="flex items-center gap-3 text-xs text-slate-500">
-          <span class="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-          </span>
-          AI 세액공제 가능성 분석
-        </div>
-        <div class="flex items-center gap-3 text-xs text-slate-500">
-          <span class="w-4 h-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
-          </span>
-          정책자금 매칭 및 잉여금 전략 수립
-        </div>
-      </div>
     </div>
   </div>
 
