@@ -604,7 +604,7 @@
   function renderSectionCard(key, sec) {
     const meta = SECTION_META[key] ?? { label: key, iconBg: 'bg-slate-500/15', iconColor: 'text-slate-400', svg: '<circle cx="12" cy="12" r="10"/>' };
     const title = sec?.title || meta.label;
-    const bullets = (sec?.bullets ?? []).filter(Boolean);
+    const bullets = (sec?.bullets ?? []).filter(Boolean).slice(0, 3);
     if (!bullets.length && !sec?.estimatedAmount) return '';
 
     const amountLine = (key === 'taxRefund' && sec?.estimatedAmount)
@@ -617,6 +617,13 @@
         <span>${escapeHtml(b)}</span>
       </li>`).join('');
 
+    const moreNote = sec?.moreNote && String(sec.moreNote).trim();
+    const moreLine = moreNote ? `
+      <div class="mt-4 pt-3 border-t border-white/10 flex items-start gap-2 text-amber-300/90 text-xs leading-relaxed">
+        <span class="shrink-0 mt-0.5">💬</span>
+        <span><span class="font-semibold">더 이야기해드릴 내용이 있어요</span> — ${escapeHtml(moreNote)}</span>
+      </div>` : '';
+
     return `
       <div class="card-enter bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-colors">
         <div class="flex items-center gap-3 mb-4">
@@ -627,6 +634,7 @@
         </div>
         ${amountLine}
         <ul class="space-y-2.5">${items}</ul>
+        ${moreLine}
       </div>`;
   }
 

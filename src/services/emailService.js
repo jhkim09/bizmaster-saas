@@ -63,16 +63,22 @@ function sectionsBlock(report) {
     const sec = s[k];
     if (!sec) return '';
     const c = colors[k];
-    const bullets = (sec.bullets ?? []).map(b => `<li style="margin:6px 0;line-height:1.55;">${esc(b)}</li>`).join('');
+    const bulletArr = (sec.bullets ?? []).filter(Boolean).slice(0, 3);
+    const bullets = bulletArr.map(b => `<li style="margin:6px 0;line-height:1.55;">${esc(b)}</li>`).join('');
     if (!bullets && !sec.estimatedAmount) return '';
     const amount = (k === 'taxRefund' && sec.estimatedAmount)
       ? `<p style="margin:6px 0 8px;color:${c.tx};font-weight:bold;">예상 환급: ${esc(sec.estimatedAmount)}</p>`
+      : '';
+    const moreNote = sec.moreNote && String(sec.moreNote).trim();
+    const moreLine = moreNote
+      ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid ${c.bd}33;color:${c.tx};font-size:12px;line-height:1.5;"><b>💬 더 이야기해드릴 내용이 있어요</b> — ${esc(moreNote)}</div>`
       : '';
     return `
       <div style="background:${c.bg};border-left:4px solid ${c.bd};padding:14px 16px;margin:14px 0;border-radius:6px;">
         <h3 style="color:${c.tx};margin:0 0 8px;font-size:15px;">${esc(sec.title || k)}</h3>
         ${amount}
         <ul style="margin:0;padding-left:20px;color:#1e293b;font-size:13px;">${bullets}</ul>
+        ${moreLine}
       </div>`;
   }).join('');
 }

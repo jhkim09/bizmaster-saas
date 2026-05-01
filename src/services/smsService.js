@@ -29,12 +29,14 @@ function formatLms({ reqName, company, report }) {
   const sectionBlocks = SECTIONS.map(([key, label]) => {
     const sec = s[key];
     if (!sec) return '';
-    const bullets = (sec.bullets ?? []).filter(Boolean);
+    const bullets = (sec.bullets ?? []).filter(Boolean).slice(0, 3);
     if (!bullets.length && !sec.estimatedAmount) return '';
     const head = `■ ${label}`;
     const amount = (key === 'taxRefund' && sec.estimatedAmount) ? `예상 환급: ${sec.estimatedAmount}` : '';
     const items = bullets.map(b => `· ${b}`).join('\n');
-    return [head, amount, items].filter(Boolean).join('\n');
+    const moreNote = sec.moreNote && String(sec.moreNote).trim();
+    const more = moreNote ? `💬 더 검토 가능: ${moreNote}` : '';
+    return [head, amount, items, more].filter(Boolean).join('\n');
   }).filter(Boolean).join('\n\n');
 
   const actions = (report?.actions ?? []).map((a, i) => `${i + 1}. ${a}`).join('\n');
